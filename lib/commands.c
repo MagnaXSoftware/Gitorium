@@ -37,7 +37,7 @@ void command_help(char **argv) {
 }
 
 void command_info(char **argv) {
-    puts("Gitorium version "GITORIUM_VER_FULL);
+    puts("Gitorium version "GITORIUM_VERSION_FULL);
     puts("Copyright (c) AfroSoft & contributors");
 }
 

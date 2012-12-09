@@ -1,2 +1,1 @@
-ADD_LIBRARY(gitorium SHARED gitorium.h)
-SET_SOURCE_FILES_PROPERTIES(gitorium.h PROPERTIES LANGUAGE C)
+ADD_LIBRARY(gitorium SHARED gitorium.c)

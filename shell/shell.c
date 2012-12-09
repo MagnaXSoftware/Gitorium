@@ -70,8 +70,8 @@ static void run_shell(char *user) {
 
         if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit")) {
             done = 1;
-        } else if (is_remote_command_valid(args[0])) {
-            call_remote_command(user, args);
+//        } else if (is_remote_command_valid(args[0])) {
+//            call_remote_command(user, args);
         } else
             fprintf(stderr, "The command does not exist.\n");
 

@@ -82,9 +82,15 @@ static void run_shell(char *user) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
+        // Someone tried to call us directly
 	fprintf(stderr, "You must call this from a shell.\n");
         exit(-1);
+    } else if (argc == 2) {
+        // Running interactive
+        run_shell(argv[1]);
+    } else if (argc > 2) {
+        // Running non-interactive
+        fprintf(stderr, "Sorry, I can't handle this yet.\n");
     }
-    run_shell(argv[1]);
     return 0;
 }

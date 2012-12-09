@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../gitorium/gitorium.h"
+#include "gitorium.h"
 
 #define LINE_BUFFER_SIZE 50
 
-void getline(char **linep) {
+static void get_line(char **linep) {
     char *line = malloc(LINE_BUFFER_SIZE);
     int len = LINE_BUFFER_SIZE, c;
     *linep = line;
@@ -33,7 +33,7 @@ void getline(char **linep) {
     *line = '\0';
 }
 
-void split_cmd(char **cmd, char **arg, char *str) {
+static void split_cmd(char **cmd, char **arg, char *str) {
     char *p, *args = malloc(1);
 
     *cmd = strtok(str, " ");
@@ -55,7 +55,7 @@ void split_cmd(char **cmd, char **arg, char *str) {
     *arg = args;
 }
 
-void split_args(char ***args, char *str) {
+static void split_args(char ***args, char *str) {
     char **res = NULL, *p = strtok(str, " ");
     int n_spaces = 0;
 
@@ -74,14 +74,14 @@ void split_args(char ***args, char *str) {
     *args = res;
 }
 
-void run_shell(void) {
+static void run_shell(void) {
     int done = 0;
 
     do {
         char *line, *cmd, *argline, **args;
 
         fprintf(stderr, "gitorium> ");
-        getline(&line);
+        get_line(&line);
 
         if (line[0] == '\0') {
             free(line);
@@ -106,7 +106,8 @@ void run_shell(void) {
     } while (!done);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    printf("%d", argc);
     run_shell();
     return 0;
 }

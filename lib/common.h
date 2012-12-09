@@ -5,6 +5,6 @@
 #include <stdio.h>
 #include <git2.h>
 
-#include "../version.h"
+#include "version.h"
 
 #endif // COMMON_H_INCLUDED

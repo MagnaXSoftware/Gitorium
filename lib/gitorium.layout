@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="commands.c" open="1" top="0" tabpos="1">
+		<Cursor position="1227" topLine="51" />
+	</File>
+	<File name="commands.h" open="1" top="0" tabpos="2">
+		<Cursor position="580" topLine="0" />
+	</File>
+	<File name="common.h" open="0" top="0" tabpos="0">
+		<Cursor position="72" topLine="0" />
+	</File>
+	<File name="../version.h" open="0" top="0" tabpos="0">
+		<Cursor position="235" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>

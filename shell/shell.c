@@ -33,28 +33,6 @@ static void get_line(char **linep) {
     *line = '\0';
 }
 
-static void split_cmd(char **cmd, char **arg, char *str) {
-    char *p, *args = malloc(1);
-
-    *cmd = strtok(str, " ");
-
-    while ((p = strtok(NULL, " "))) {
-        char *argsn = realloc(args, sizeof args + 2 + sizeof p);
-
-        if (argsn == NULL)
-            exit(-2);
-
-        args = argsn;
-        strcat(args, p);
-        strcat(args, " ");
-    }
-
-    if (strlen(args) > 0)
-        args[strlen(args)-1] = '\0';
-
-    *arg = args;
-}
-
 static void split_args(char ***args, char *str) {
     char **res = NULL, *p = strtok(str, " ");
     int n_spaces = 0;
@@ -74,13 +52,13 @@ static void split_args(char ***args, char *str) {
     *args = res;
 }
 
-static void run_shell(void) {
+static void run_shell(char *user) {
     int done = 0;
 
     do {
-        char *line, *cmd, *argline, **args;
+        char *line, **args;
 
-        fprintf(stderr, "gitorium> ");
+        fprintf(stderr, "gitorium (%s)> ", user);
         get_line(&line);
 
         if (line[0] == '\0') {
@@ -88,26 +66,25 @@ static void run_shell(void) {
             break;
         }
 
-        split_cmd(&cmd, &argline, line);
+        split_args(&args, line);
 
-        if (!strcmp(cmd, "quit") || !strcmp(cmd, "exit")) {
+        if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit")) {
             done = 1;
-        } else if (is_remote_command_valid(cmd)) {
-            if (argline[0] != '\0')
-                split_args(&args, argline);
-
-            call_remote_command(cmd, args);
+        } else if (is_remote_command_valid(args[0])) {
+            call_remote_command(user, args);
         } else
             fprintf(stderr, "The command does not exist.\n");
 
         free(line);
-        if (argline != NULL)
-            free(argline);
+        free(args);
     } while (!done);
 }
 
 int main(int argc, char **argv) {
-    printf("%d", argc);
-    run_shell();
+    if (argc < 2) {
+	fprintf(stderr, "You must call this from a shell.\n");
+        exit(-1);
+    }
+    run_shell(argv[1]);
     return 0;
 }

@@ -10,7 +10,7 @@ int is_remote_command_valid(char *cmd) {
     return 0;
 }
 
-void call_remote_command(char *cmd, char **argv) {
+void call_remote_command(char *user, char **argv) {
     CALL_CMD("info", command_info)
     CALL_CMD("list", command_list)
     CALL_CMD("list-repos", command_list_repos)
@@ -18,9 +18,9 @@ void call_remote_command(char *cmd, char **argv) {
     CALL_CMD("help", command_help)
 }
 
-void command_help(char **argv) {
+void command_help(char *user, char **argv) {
     HELP_PRINT("Gitorium help")
-    if (argv == (char **)NULL) {
+    if (argv[1] == NULL) {
         HELP_BLANK
         HELP_PRINT("To see a list of the available commands, type 'list commands'.")
         HELP_PRINT("To see help about a specific command, type 'help ' followed by the command.")
@@ -36,7 +36,7 @@ void command_help(char **argv) {
     }
 }
 
-void command_info(char **argv) {
+void command_info(char *user, char **argv) {
     puts("Gitorium version "GITORIUM_VERSION_FULL);
     puts("Copyright (c) AfroSoft & contributors");
 }
@@ -47,8 +47,8 @@ void command_help_info(char **argv) {
     HELP_PRINT("Give information about this gitorium version")
 }
 
-void command_list(char **argv) {
-    if (argv == NULL) {
+void command_list(char *user, char **argv) {
+    if (argv[1] == NULL) {
         fprintf(stderr, "You must indicate what type of list you wish.\n");
         fprintf(stderr, "For help, type 'help list'.\n");
         return;
@@ -67,7 +67,7 @@ void command_help_list(char **argv) {
     HELP_PRINT("\tcommands - List commands")
 }
 
-void command_list_repos(char **argv) {
+void command_list_repos(char *user, char **argv) {
     puts("Here are all the repositories we know:");
 }
 
@@ -77,7 +77,7 @@ void command_help_list_repos(char **argv) {
     HELP_PRINT("List the repositories")
 }
 
-void command_list_commands(char **argv) {
+void command_list_commands(char *user, char **argv) {
     puts("Here are all the commands we know:");
 }
 

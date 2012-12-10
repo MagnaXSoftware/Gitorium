@@ -101,12 +101,7 @@ static int setup_admin_repo(char *pubkey)
 
             if ((file = fopen(".gitorium-admin/conf/repos.cfg", "w")))
             {
-                fprintf(file, "users:\n"
-                        "[\n"
-                        "   \"%s\"\n"
-                        "];\n"
-                        "\n"
-                        "/* Groups differ from users in that they must start by a '*' character\n"
+                fprintf(file, "/* Groups must start by a '*' character\n"
                         "   \n"
                         "   The groups are defined as a key value pair, one per line.\n"
                         "   The key is the name of the group, while the value is a bracket enclosed\n"
@@ -131,8 +126,8 @@ static int setup_admin_repo(char *pubkey)
                         "       perms = {\n"
                         "           %s = \"RW\"\n"
                         "       };\n"
-                        "   };\n"
-                        ");", user, user, user);
+                        "   }\n"
+                        ");", user, user);
                 free(user);
                 fclose(file);
             }

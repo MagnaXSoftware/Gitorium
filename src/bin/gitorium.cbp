@@ -22,6 +22,9 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 		</Compiler>
+		<Unit filename="common.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="common.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />

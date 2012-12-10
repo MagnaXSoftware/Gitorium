@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1355126641 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/setup.c
+1355170740 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/setup.c
 	"common.h"
 	"setup.h"
 
@@ -9,12 +9,15 @@
 	<sys/stat.h>
 	<string.h>
 
-1355116899 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/main.c
+1355170773 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/main.c
 	<string.h>
-	<getopt.h>
+	<libconfig.h>
 	"common.h"
 
-1355116876 /home/xav0989/Workspace/gitorium/trunk/src/bin/common.h
+1355170506 /home/xav0989/Workspace/gitorium/trunk/src/bin/common.h
 	<stdio.h>
 	"setup.h"
+
+1355170685 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/common.c
+	"common.h"
 

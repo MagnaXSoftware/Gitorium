@@ -8,5 +8,7 @@
 #define PRINT_ERROR(s) fprintf(stderr, s"\n");
 #define PRINTF_ERROR(s, f) fprintf(stderr, s"\n", f);
 
+#define RC_FILE ".gitorium.rc"
+
 #endif // COMMON_H_INCLUDED
 

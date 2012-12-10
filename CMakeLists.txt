@@ -15,8 +15,7 @@ IF (NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 ENDIF ()
 
-INCLUDE_DIRECTORIES(include lib shell)
- 
-# add the executable
-ADD_SUBDIRECTORY(lib)
-ADD_SUBDIRECTORY(shell)
+INCLUDE_DIRECTORIES(src src/bin src/shell)
+
+ADD_SUBDIRECTORY(src/bin)
+#ADD_SUBDIRECTORY(src/shell)

@@ -1,4 +1,5 @@
 obj
-bin
+test
+Debug
 build
 build.log

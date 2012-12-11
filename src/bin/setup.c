@@ -102,13 +102,13 @@ int setup_admin_repo(char *pubkey)
     git_repository *repo, *bRepo;
     git_remote *rRemote;
     git_signature *rAuthor;
-    git_treebuilder *rBuilder;
+    git_treebuilder *rBuilder, *rcBuilder;
     git_oid iOid;
     git_tree *rTree;
 
     FILE *pFile;
-    char *pPath, *user = malloc(sizeof(char)*(strlen(pubkey)+1)), *buffer,
-                         *rFullpath, *rUrl, *conf;
+    char *buffer, *rFullpath, *rUrl, *conf,
+        *user = malloc(sizeof(char)*(strlen(pubkey)+1));
     const char *rPath;
     int size, result;
     struct stat rStat;
@@ -136,10 +136,10 @@ int setup_admin_repo(char *pubkey)
             return EXIT_FAILURE;
         }
 
-        if (git_treebuilder_create(&rBuilder, NULL))
+        if (git_treebuilder_create(&rcBuilder, NULL))
         {
-            PRINT_ERROR("Could not create a tree builder.")
-            git_treebuilder_free(rBuilder);
+            PRINT_ERROR("Could not create keys tree builder.")
+            git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             fclose(pFile);
             free(conf);
@@ -156,7 +156,7 @@ int setup_admin_repo(char *pubkey)
         {
             PRINT_ERROR("Could not copy the public key.")
             free(buffer);
-            git_treebuilder_free(rBuilder);
+            git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             fclose(pFile);
             free(conf);
@@ -168,7 +168,7 @@ int setup_admin_repo(char *pubkey)
         {
             PRINT_ERROR("Could not copy the public key.")
             free(buffer);
-            git_treebuilder_free(rBuilder);
+            git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             fclose(pFile);
             free(conf);
@@ -181,7 +181,7 @@ int setup_admin_repo(char *pubkey)
         {
             PRINT_ERROR("Could not create the administrator's public key.")
             free(buffer);
-            git_treebuilder_free(rBuilder);
+            git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             free(conf);
             return EXIT_FAILURE;
@@ -189,23 +189,43 @@ int setup_admin_repo(char *pubkey)
 
         free(buffer);
 
-   /*     pPath = malloc(sizeof(pubkey) + sizeof("keys/") + 1);
-        strcat(strcpy(pPath, "keys/"), pubkey);
-
-        if (git_treebuilder_insert(NULL, rBuilder, pPath, &iOid, 0700))
+        if (git_treebuilder_insert(NULL, rcBuilder, pubkey, &iOid, 0600))
         {
             PRINT_ERROR("Could not insert the administrator's public key.")
-            const git_error *err = giterr_last();
-            PRINTF_ERROR("%s", err->message)
-            free(pPath);
-            free(buffer);
+            git_treebuilder_free(rcBuilder);
+            git_repository_free(repo);
+            free(conf);
+            return EXIT_FAILURE;
+        }
+
+        if (git_treebuilder_write(&iOid, repo, rcBuilder))
+        {
+            PRINT_ERROR("Could not write the tree to index.")
+            git_treebuilder_free(rcBuilder);
+            git_repository_free(repo);
+            free(conf);
+            return EXIT_FAILURE;
+        }
+
+        git_treebuilder_free(rcBuilder);
+
+        if (git_treebuilder_create(&rBuilder, NULL))
+        {
+            PRINT_ERROR("Could not create a tree builder.")
             git_treebuilder_free(rBuilder);
             git_repository_free(repo);
             free(conf);
             return EXIT_FAILURE;
         }
 
-        free(pPath);*/
+        if (git_treebuilder_insert(NULL, rBuilder, "keys", &iOid, 040000))
+        {
+            PRINT_ERROR("Could not insert the keys tree.")
+            git_treebuilder_free(rBuilder);
+            git_repository_free(repo);
+            free(conf);
+            return EXIT_FAILURE;
+        }
 
         if (git_blob_create_frombuffer(&iOid, repo, conf, sizeof(char)*strlen(conf)))
         {
@@ -216,7 +236,7 @@ int setup_admin_repo(char *pubkey)
             return EXIT_FAILURE;
         }
 
-        if (git_treebuilder_insert(NULL, rBuilder, "gitorium.conf", &iOid, 0770))
+        if (git_treebuilder_insert(NULL, rBuilder, "gitorium.conf", &iOid, 0660))
         {
             PRINT_ERROR("Could not insert the administration file.")
             git_treebuilder_free(rBuilder);

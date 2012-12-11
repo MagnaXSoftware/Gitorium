@@ -7,10 +7,10 @@ typedef struct
     int (*help_fn)(int, char **);
 } cmd_t;
 
-
 static cmd_t commands[] =
 {
-    {"setup", cmd_setup, cmd_setup_help}
+    {"setup", cmd_setup, cmd_setup_help},
+    {NULL, NULL, NULL}
 };
 
 static int main_help(int argc, char **argv)

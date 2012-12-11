@@ -3,3 +3,4 @@ test
 Debug
 build
 build.log
+*.depend

@@ -189,7 +189,7 @@ int setup_admin_repo(char *pubkey)
 
         free(buffer);
 
-        if (git_treebuilder_insert(NULL, rcBuilder, pubkey, &iOid, 0600))
+        if (git_treebuilder_insert(NULL, rcBuilder, pubkey, &iOid, 0100644))
         {
             PRINT_ERROR("Could not insert the administrator's public key.")
             git_treebuilder_free(rcBuilder);
@@ -236,7 +236,7 @@ int setup_admin_repo(char *pubkey)
             return EXIT_FAILURE;
         }
 
-        if (git_treebuilder_insert(NULL, rBuilder, "gitorium.conf", &iOid, 0660))
+        if (git_treebuilder_insert(NULL, rBuilder, "gitorium.conf", &iOid, 0100644))
         {
             PRINT_ERROR("Could not insert the administration file.")
             git_treebuilder_free(rBuilder);
@@ -284,8 +284,6 @@ int setup_admin_repo(char *pubkey)
 
         git_signature_free(rAuthor);
         git_tree_free(rTree);
-        git_repository_free(repo);
-        return 0;
 
         //push the commit to origin
 
@@ -296,23 +294,52 @@ int setup_admin_repo(char *pubkey)
 
         if (git_repository_init(&bRepo, rFullpath, 1))
         {
+            PRINT_ERROR("Could not initialize the remote admin repository.")
             free(rFullpath);
-            git_signature_free(rAuthor);
             git_repository_free(repo);
             return EXIT_FAILURE;
         }
 
-        rUrl = malloc(sizeof("file://") + sizeof(char)*(strlen(rFullpath) + 1));
-        strcat(strcpy(rUrl, "file://"), rFullpath);
-        //git_remote_add(&rRemote, repo, "origin", )
-
-        free(rUrl);
-        git_remote_free(rRemote);
         git_repository_free(bRepo);
 
+        rUrl = malloc(sizeof("file://") + sizeof(char)*(strlen(rFullpath) + 1));
+        strcat(strcpy(rUrl, "file://"), rFullpath);
         free(rFullpath);
-        git_repository_free(repo);
 
+        if (git_remote_add(&rRemote, repo, "origin", rUrl))
+        {
+            PRINT_ERROR("Could not add the bare repository as remote.")
+            git_remote_free(rRemote);
+            free(rUrl);
+            git_repository_free(repo);
+            return EXIT_FAILURE;
+        }
+
+        free(rUrl);
+
+        #ifndef _NO_GIT2_PUSH
+        if (git_remote_connect(rRemote, GIT_DIR_PUSH))
+        {
+            PRINT_ERROR("Could not propagate the repository.")
+            const git_error *err = giterr_last();
+            fprintf(stderr, "%s\n", err->message);
+            git_remote_disconnect(rRemote);
+            git_remote_free(rRemote);
+            git_repository_free(repo);
+            return EXIT_FAILURE;
+        }
+        #else
+        chdir(".gitorium-admin");
+        system("git push origin master");
+        chdir("..");
+        #endif
+
+        system("rm -rf .gitorium-admin/");
+
+        git_remote_disconnect(rRemote);
+        git_remote_free(rRemote);
+        git_repository_free(repo);
+        return 0;
     }
     else
     {

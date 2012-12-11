@@ -1,23 +1,47 @@
 # depslib dependency file v1.0
-1355170740 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/setup.c
-	"common.h"
+1355206538 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/setup.c
 	"setup.h"
 
-1355126399 /home/xav0989/Workspace/gitorium/trunk/src/bin/setup.h
+1355188475 /home/xav0989/Workspace/gitorium/trunk/src/bin/setup.h
 	<git2.h>
 	<libconfig.h>
 	<sys/stat.h>
 	<string.h>
+	"../common.h"
 
-1355170773 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/main.c
-	<string.h>
-	<libconfig.h>
-	"common.h"
+1355194898 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/main.c
+	"main.h"
 
-1355170506 /home/xav0989/Workspace/gitorium/trunk/src/bin/common.h
+1355187376 /home/xav0989/Workspace/gitorium/trunk/src/bin/common.h
 	<stdio.h>
 	"setup.h"
+	"config.h"
 
 1355170685 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/common.c
 	"common.h"
+
+1355186902 source:/home/xav0989/Workspace/gitorium/trunk/src/bin/config.c
+	"common.h"
+
+1355187432 /home/xav0989/Workspace/gitorium/trunk/src/bin/config.h
+	<libconfig.h>
+	"common.h"
+
+1355188361 /home/xav0989/Workspace/gitorium/trunk/src/common.h
+	<stdio.h>
+	"config.h"
+
+1355194527 /home/xav0989/Workspace/gitorium/trunk/src/config.h
+	<stdlib.h>
+	<libconfig.h>
+	<string.h>
+	"common.h"
+
+1355194533 source:/home/xav0989/Workspace/gitorium/trunk/src/config.c
+	"config.h"
+
+1355189301 /home/xav0989/Workspace/gitorium/trunk/src/bin/main.h
+	<string.h>
+	"../common.h"
+	"setup.h"
 

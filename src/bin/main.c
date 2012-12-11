@@ -1,6 +1,4 @@
-#include <string.h>
-#include <libconfig.h>
-#include "common.h"
+#include "main.h"
 
 typedef struct
 {
@@ -73,51 +71,17 @@ static int handle_command(int argc, char **argv)
     return EXIT_FAILURE;
 }
 
-static void init(void)
-{
-    config_t cfg;
-    FILE *cFile;
-
-    config_init(&cfg);
-
-    if ((cFile = fopen(RC_FILE, "r")))
-    {
-        if(!config_read(&cfg, cFile))
-        {
-            PRINT_ERROR("Could not read configuration")
-            fprintf(stderr, RC_FILE":%d - %s\n", config_error_line(&cfg),
-                    config_error_text(&cfg));
-            config_destroy(&cfg);
-            exit(EXIT_FAILURE);
-        }
-    }
-    else
-    {
-        config_setting_t *root, *setting;
-
-        root = config_root_setting(&cfg);
-
-        setting = config_setting_add(root, "repositories", CONFIG_TYPE_STRING);
-        config_setting_set_string(setting, "/var/repositories");
-
-        if(!config_write_file(&cfg, RC_FILE))
-        {
-            PRINT_ERROR("Error while writing configuration.")
-            config_destroy(&cfg);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    config_destroy(&cfg);
-}
-
 int main(int argc, char **argv)
 {
     // We remove the name of the executable from the list
     argv++;
     argc--;
 
-    init();
+    if (gitorium_config_init())
+    {
+        PRINT_ERROR("Could not initialize the configuration.")
+        return EXIT_FAILURE;
+    }
 
     if ((argc == 0) || (argc == 1 && !strcmp("help", argv[0])))
     {

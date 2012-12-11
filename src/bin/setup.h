@@ -6,9 +6,11 @@
 #include <sys/stat.h>
 #include <string.h>
 
+#include "../common.h"
+
 int cmd_setup(int argc, char **argv);
 int cmd_setup_help(int argc, char **argv);
 
-static int setup_admin_repo(char *pubkey);
+int setup_admin_repo(char *pubkey);
 
 #endif // SETUP_H_INCLUDED

@@ -20,7 +20,7 @@ static int main_help(int argc, char **argv)
          "For more information on a particular command, please run gitorium help <command>\n"
          "\n"
          "Available commands:");
-    for (int i = 0; i < ARRAY_SIZE(commands); i++)
+    for (unsigned int i = 0; i < ARRAY_SIZE(commands); i++)
     {
         cmd_t *p = commands+i;
         printf("\t%s\n", p->cmd);
@@ -53,7 +53,7 @@ static int handle_command(int argc, char **argv)
         cmd = argv[0];
     }
 
-    for (int i = 0; i < ARRAY_SIZE(commands); i++)
+    for (unsigned int i = 0; i < ARRAY_SIZE(commands); i++)
     {
         cmd_t *p = commands+i;
         if (strcmp(p->cmd, cmd))

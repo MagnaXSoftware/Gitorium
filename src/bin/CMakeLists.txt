@@ -1,1 +1,2 @@
-ADD_EXECUTABLE(gitorium main.c setup.c)
+ADD_EXECUTABLE(gitorium main.c setup.c ../config.c)
+TARGET_LINK_LIBRARIES(gitorium ${GIT2_LIBRARIES} ${LIBCONFIG_LIBRARIES})

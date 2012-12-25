@@ -1,40 +1,6 @@
 #include "setup.h"
 
-int cmd_setup(int argc, char **argv)
-{
-    // We remove the name of the executable from the list
-    argv++;
-    argc--;
-
-    if (argc == 0)
-    {
-        cmd_setup_help(argc, argv);
-        return EXIT_FAILURE;
-    }
-
-    if (!setup_admin_repo(argv[0]))
-    {
-        return 0;
-    }
-    else
-        PRINT_ERROR("Could not initialize the admin repository.");
-
-    return EXIT_FAILURE;
-}
-
-int cmd_setup_help(int argc, char **argv)
-{
-    puts("gitorium setup <pubkey>\n"
-         "\n"
-         "Sets up gitorium for the current user.\n"
-         "\n"
-         "<pubkey> is the path to the administrator's public key. It should be "
-         "named after the user (user admin has a key named admin.pub). That "
-         "user will be set up as the initial administrator.");
-    return 0;
-}
-
-void get_init_conf(char **fullconf, char *user)
+static void get_init_conf(char **fullconf, char *user)
 {
     char *parts[3] =
     {
@@ -97,7 +63,7 @@ void get_init_conf(char **fullconf, char *user)
     }
 }
 
-int setup_admin_repo(char *pubkey)
+static int setup_admin_repo(char *pubkey)
 {
     git_repository *repo, *bRepo;
     git_remote *rRemote;
@@ -317,6 +283,7 @@ int setup_admin_repo(char *pubkey)
 
         free(rUrl);
 
+        #ifdef PUSH
         #ifndef _NO_GIT2_PUSH
         if (git_remote_connect(rRemote, GIT_DIR_PUSH))
         {
@@ -335,6 +302,7 @@ int setup_admin_repo(char *pubkey)
         #endif
 
         system("rm -rf .gitorium-admin/");
+        #endif
 
         git_remote_disconnect(rRemote);
         git_remote_free(rRemote);
@@ -347,5 +315,39 @@ int setup_admin_repo(char *pubkey)
         return EXIT_FAILURE;
     }
 
+    return 0;
+}
+
+int cmd_setup(int argc, char **argv)
+{
+    // We remove the name of the executable from the list
+    argv++;
+    argc--;
+
+    if (argc == 0)
+    {
+        cmd_setup_help(argc, argv);
+        return EXIT_FAILURE;
+    }
+
+    if (!setup_admin_repo(argv[0]))
+    {
+        return 0;
+    }
+    else
+        PRINT_ERROR("Could not initialize the admin repository.");
+
+    return EXIT_FAILURE;
+}
+
+int cmd_setup_help(int argc, char **argv)
+{
+    puts("gitorium setup <pubkey>\n"
+         "\n"
+         "Sets up gitorium for the current user.\n"
+         "\n"
+         "<pubkey> is the path to the administrator's public key. It should be "
+         "named after the user (user admin has a key named admin.pub). That "
+         "user will be set up as the initial administrator.");
     return 0;
 }

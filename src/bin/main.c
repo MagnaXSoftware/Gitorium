@@ -9,6 +9,7 @@ typedef struct
 
 static cmd_t commands[] =
 {
+    {"helper-ssh", cmd_helper_ssh, cmd_helper_ssh_help},
     {"setup", cmd_setup, cmd_setup_help},
     {NULL, NULL, NULL}
 };
@@ -20,7 +21,7 @@ static int main_help(int argc, char **argv)
          "For more information on a particular command, please run gitorium help <command>\n"
          "\n"
          "Available commands:");
-    for (unsigned int i = 0; i < ARRAY_SIZE(commands); i++)
+    for (unsigned int i = 0; i < ARRAY_SIZE(commands)-1; i++)
     {
         cmd_t *p = commands+i;
         printf("\t%s\n", p->cmd);

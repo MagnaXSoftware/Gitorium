@@ -14,6 +14,4 @@
 int cmd_setup(int argc, char **argv);
 int cmd_setup_help(int argc, char **argv);
 
-int setup_admin_repo(char *pubkey);
-
 #endif // SETUP_H_INCLUDED

@@ -8,33 +8,22 @@ int gitorium_config_close(void)
 
 int gitorium_config_save(void)
 {
-    char *rcfile = malloc(sizeof(RC_FILE) + sizeof(char) * (strlen(getenv("HOME")) + 2));
-    strcat(strcpy(rcfile, getenv("HOME")), "/"RC_FILE);
-
-    if(!config_write_file(&aCfg, rcfile))
+    if(!config_write_file(&aCfg, RC_FILE))
     {
         PRINT_ERROR("Could not save configuration file.")
         gitorium_config_close();
-        free(rcfile);
         return EXIT_FAILURE;
     }
-
-    free(rcfile);
     return 0;
 }
 
 int gitorium_config_init(void)
 {
-    char *rcfile = malloc(sizeof(RC_FILE) + sizeof(char) * (strlen(getenv("HOME")) + 2));
-    strcat(strcpy(rcfile, getenv("HOME")), "/"RC_FILE);
-
     config_init(&aCfg);
 
-    if(!config_read_file(&aCfg, rcfile))
+    if(!config_read_file(&aCfg, RC_FILE))
     {
         config_setting_t *root, *setting;
-
-        free(rcfile);
 
         root = config_root_setting(&aCfg);
 
@@ -44,7 +33,5 @@ int gitorium_config_init(void)
         if(!gitorium_config_save())
             return EXIT_FAILURE;
     }
-
-    free(rcfile);
     return 0;
 }

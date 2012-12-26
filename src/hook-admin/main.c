@@ -1,17 +1,17 @@
-#include "helper_ssh.h"
+#include "main.h"
 
-static int helper_ssh__user_reset()
+static int ssh__reset()
 {
     FILE *file;
     struct stat rStat;
     char *path = malloc(sizeof("/.ssh") + sizeof(char) * (strlen(getenv("HOME")) + 1));
-    strcat(strcpy(path, getenv("HOME")), "/.ssh");
+    strcat(strcpy(rcfile, getenv("HOME")), "/.ssh");
 
     if (!stat(path, &rStat))
         mkdir(path, S_IRWXU);
 
-    path = realloc(path, sizeof(char) * (strlen(path) + strlen("/authorized_keys") + 1));
-    strcat(path, "/authorized_keys");
+    *path = realloc(*path, sizeof(char) * (strlen(path) + strlen("/authorized_keys") + 1));
+    strcat(*path, "/authorized_keys");
 
     if ((file = fopen(path, "w")) == NULL)
     {
@@ -23,21 +23,22 @@ static int helper_ssh__user_reset()
     return 0;
 }
 
-static int helper_ssh__user_add(const char *root, git_tree_entry *entry, void *payload)
+static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 {
     return 0;
 }
 
-static int helper_ssh__user_setup()
+static int ssh__setup()
 {
     git_repository *bRepo;
     git_reference *bHead, *bRealHead;
     git_commit *hCommit;
     git_tree *hTree, *kTree;
+    const git_oid oid;
 
     char *bFullpath, *rPath;
 
-    config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
+    config_lookup_string(&aCfg, "repositories", &rPath);
 
     bFullpath = malloc(sizeof("gitorium-admin.git") + sizeof(char)*(strlen(rPath)+1));
     strcat(strcpy(bFullpath, rPath), "gitorium-admin.git");
@@ -66,14 +67,17 @@ static int helper_ssh__user_setup()
         return EXIT_FAILURE;
     }
 
-    if (git_commit_lookup(&hCommit, bRepo, git_reference_oid(bRealHead)))
+    &oid = git_reference_oid(bRealHead);
+
+    git_reference_free(bHead);
+    git_reference_free(bRealHead);
+
+    if (git_commit_lookup(&hCommit, bRepo, const &oid))
     {
         PRINT_ERROR("Could not load the commit.")
         git_repository_free(bRepo);
         return EXIT_FAILURE;
     }
-
-    git_reference_free(bRealHead);
 
     if (git_commit_tree(&hTree, hCommit))
     {
@@ -83,7 +87,7 @@ static int helper_ssh__user_setup()
         return EXIT_FAILURE;
     }
 
-    if (git_tree_get_subtree(&kTree, hTree, "keys"))
+    if (git_tree_get_subtree(&kTree, &hTree, "keys"))
     {
         PRINT_ERROR("Could not find the \"keys\" subtree in the main tree.")
         git_tree_free(hTree);
@@ -94,26 +98,18 @@ static int helper_ssh__user_setup()
 
     git_tree_free(hTree);
 
-    helper_ssh__user_reset();
+    ssh__reset();
 
-    git_tree_walk(kTree, helper_ssh__user_add, GIT_TREEWALK_POST, NULL);
+    git_tree_walk(kTree, ssh__add, GIT_TREEWALK_POST, NULL);
 
     return 0;
 }
 
-int cmd_helper_ssh(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    // We remove the name of the executable from the list
-    argv++;
-    argc--;
-
-    return helper_ssh__user_setup();
-}
-
-int cmd_helper_ssh_help(int argc, char **argv)
-{
-    puts("gitorium helper-ssh\n"
-         "\n"
-         "Generates a authorized_keys files from the commited keys.");
+    for (int i = 0; i < argc, i++)
+    {
+        puts(argv[i]);
+    }
     return 0;
 }

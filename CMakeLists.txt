@@ -20,9 +20,10 @@ IF (NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 ENDIF ()
 
-INCLUDE_DIRECTORIES(src src/bin src/shell src/hook-update src/hook-post-update)
+INCLUDE_DIRECTORIES(src src/bin src/shell src/hook-admin src/hook-update src/hook-post-update)
 
 ADD_SUBDIRECTORY(src/bin)
 ADD_SUBDIRECTORY(src/shell)
+ADD_SUBDIRECTORY(src/hook-admin)
 ADD_SUBDIRECTORY(src/hook-update)
 ADD_SUBDIRECTORY(src/hook-post-update)

@@ -1,6 +1,9 @@
 #ifndef HELPER_SSH_H_INCLUDED
 #define HELPER_SSH_H_INCLUDED
 
+#include <git2.h>
+#include <sys/stat.h>
+
 #include "../common.h"
 
 int cmd_helper_ssh(int argc, char **argv);

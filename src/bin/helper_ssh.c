@@ -66,6 +66,8 @@ static int helper_ssh__user_setup()
         return EXIT_FAILURE;
     }
 
+    git_reference_free(bHead);
+
     if (git_commit_lookup(&hCommit, bRepo, git_reference_oid(bRealHead)))
     {
         PRINT_ERROR("Could not load the commit.")

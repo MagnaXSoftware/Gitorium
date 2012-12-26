@@ -31,6 +31,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.h" />
+		<Unit filename="ssh.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ssh.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

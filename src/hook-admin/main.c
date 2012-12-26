@@ -1,6 +1,6 @@
-#include "helper_ssh.h"
+#include "main.h"
 
-static int helper_ssh__user_reset()
+static int ssh__reset()
 {
     FILE *file;
     struct stat rStat;
@@ -23,12 +23,12 @@ static int helper_ssh__user_reset()
     return 0;
 }
 
-static int helper_ssh__user_add(const char *root, git_tree_entry *entry, void *payload)
+static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 {
     return 0;
 }
 
-static int helper_ssh__user_setup()
+static int ssh__setup()
 {
     git_repository *bRepo;
     git_reference *bHead, *bRealHead;
@@ -98,24 +98,18 @@ static int helper_ssh__user_setup()
 
     git_tree_free(hTree);
 
-    git_tree_walk(kTree, helper_ssh__user_add, GIT_TREEWALK_POST, NULL);
+    ssh__reset();
+
+    git_tree_walk(kTree, ssh__add, GIT_TREEWALK_POST, NULL);
 
     return 0;
 }
 
-int cmd_helper_ssh(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    // We remove the name of the executable from the list
-    argv++;
-    argc--;
-
-    return setup_user_ssh();
-}
-
-int cmd_helper_ssh_help(int argc, char **argv)
-{
-    puts("gitorium helper-ssh\n"
-         "\n"
-         "Generates a authorized_keys files from the commited keys.");
+    for (int i = 0; i < argc, i++)
+    {
+        puts(argv[i]);
+    }
     return 0;
 }

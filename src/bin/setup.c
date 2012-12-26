@@ -1,6 +1,6 @@
 #include "setup.h"
 
-static void get_init_conf(char **fullconf, char *user)
+static void setup__generate_conf(char **fullconf, char *user)
 {
     char *parts[3] =
     {
@@ -63,7 +63,7 @@ static void get_init_conf(char **fullconf, char *user)
     }
 }
 
-static int setup_admin_repo(char *pubkey)
+static int setup__admin_repo(char *pubkey)
 {
     git_repository *repo, *bRepo;
     git_remote *rRemote;
@@ -80,13 +80,13 @@ static int setup_admin_repo(char *pubkey)
     struct stat rStat;
 
     strcpy(user, pubkey);
-    if (user[0] == '@')
+    if (user[0] == '*')
     {
-        PRINT_ERROR("Users cannot begin with @. Please rename the file.")
+        PRINT_ERROR("Users cannot begin with *. Please rename the file.")
         return EXIT_FAILURE;
     }
     user = strtok(user, ".");
-    get_init_conf(&conf, user);
+    setup__generate_conf(&conf, user);
     free(user);
 
     if ((pFile = fopen(pubkey, "r")))
@@ -268,6 +268,16 @@ static int setup_admin_repo(char *pubkey)
 
         git_repository_free(bRepo);
 
+        char *hFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-receive") + 1));
+        strcat(strcpy(hFullpath, rFullpath), "/hooks/post-receive");
+        symlink("gitorium-hook-admin", hFullpath);
+
+        hFullpath = realloc(*hFullpath, sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
+        strcat(strcpy(hFullpath, rFullpath), "/hooks/update");
+        symlink("gitorium-hook-admin", hFullpath);
+
+        free(hFullpath);
+
         rUrl = malloc(sizeof("file://") + sizeof(char)*(strlen(rFullpath) + 1));
         strcat(strcpy(rUrl, "file://"), rFullpath);
         free(rFullpath);
@@ -330,7 +340,7 @@ int cmd_setup(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    if (!setup_admin_repo(argv[0]))
+    if (!setup__admin_repo(argv[0]))
     {
         return 0;
     }

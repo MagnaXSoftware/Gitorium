@@ -25,7 +25,7 @@ static int ssh__reset(void)
 
 static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 {
-    puts(git_tree_entry_name(entry));
+    printf("[%s]: %s", root, git_tree_entry_name(entry));
     return 0;
 }
 

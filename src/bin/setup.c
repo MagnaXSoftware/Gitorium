@@ -270,11 +270,11 @@ static int setup__admin_repo(char *pubkey)
 
         char *hFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-update") + 1));
         strcat(strcpy(hFullpath, rFullpath), "/hooks/post-update");
-        symlink("gitorium-hook-admin", hFullpath);
+        symlink(CMAKE_INSTALL_PREFIX"bin/gitorium-hook-admin", hFullpath);
 
         hFullpath = realloc(hFullpath, sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
         strcat(strcpy(hFullpath, rFullpath), "/hooks/update");
-        symlink("gitorium-hook-admin", hFullpath);
+        symlink(CMAKE_INSTALL_PREFIX"bin/gitorium-hook-admin", hFullpath);
 
         free(hFullpath);
 

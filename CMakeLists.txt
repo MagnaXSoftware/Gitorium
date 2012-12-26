@@ -20,14 +20,6 @@ IF (NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 ENDIF ()
 
-# Uninstall
-CONFIGURE_FILE(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
-  IMMEDIATE @ONLY)
-ADD_CUSTOM_TARGET(uninstall
-  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake") 
-
 # Targets
 
 INCLUDE_DIRECTORIES(src src/bin src/shell src/hook-admin src/hook-update src/hook-post-update)

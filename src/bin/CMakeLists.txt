@@ -1,3 +1,3 @@
-ADD_EXECUTABLE(gitorium main.c setup.c ../config.c)
+ADD_EXECUTABLE(gitorium main.c setup.c helper_ssh.c ../config.c)
 TARGET_LINK_LIBRARIES(gitorium ${GIT2_LIBRARIES} ${LIBCONFIG_LIBRARIES})
 INSTALL(TARGETS gitorium RUNTIME DESTINATION bin)

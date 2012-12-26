@@ -268,11 +268,11 @@ static int setup__admin_repo(char *pubkey)
 
         git_repository_free(bRepo);
 
-        char *hFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-receive") + 1));
-        strcat(strcpy(hFullpath, rFullpath), "/hooks/post-receive");
+        char *hFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-update") + 1));
+        strcat(strcpy(hFullpath, rFullpath), "/hooks/post-update");
         symlink("gitorium-hook-admin", hFullpath);
 
-        hFullpath = realloc(*hFullpath, sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
+        hFullpath = realloc(hFullpath, sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
         strcat(strcpy(hFullpath, rFullpath), "/hooks/update");
         symlink("gitorium-hook-admin", hFullpath);
 

@@ -1,6 +1,9 @@
 #include "helper_ssh.h"
 
-static void read_dir
+static char** list_keys()
+{
+    return NULL;
+}
 
 int cmd_helper_ssh(int argc, char **argv)
 {

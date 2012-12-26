@@ -23,11 +23,6 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 		</Compiler>
-		<Unit filename="../common.h" />
-		<Unit filename="../config.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../config.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -36,10 +31,11 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="setup.h" />
-		<Unit filename="helper_ssh.c">
+		<Unit filename="../common.h" />
+		<Unit filename="../config.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="helper_ssh.h" />
+		<Unit filename="../config.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

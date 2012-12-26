@@ -55,7 +55,7 @@ static void setup__generate_conf(char **fullconf, char *user)
     *fullconf = malloc(sizeof(char)*(strlen(parts[0])+1));
     strcpy(*fullconf, parts[0]);
 
-    for(int i = 1; i < ARRAY_SIZE(parts); i++)
+    for(unsigned int i = 1; i < ARRAY_SIZE(parts); i++)
     {
         *fullconf = realloc(*fullconf, sizeof(char)*(strlen(*fullconf)+strlen(user)+strlen(parts[i])+1));
         strcat(*fullconf, user);
@@ -270,11 +270,11 @@ static int setup__admin_repo(char *pubkey)
 
         char *hFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-update") + 1));
         strcat(strcpy(hFullpath, rFullpath), "/hooks/post-update");
-        symlink(CMAKE_INSTALL_PREFIX"bin/gitorium-hook-admin", hFullpath);
+        symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-admin", hFullpath);
 
         hFullpath = realloc(hFullpath, sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
         strcat(strcpy(hFullpath, rFullpath), "/hooks/update");
-        symlink(CMAKE_INSTALL_PREFIX"bin/gitorium-hook-admin", hFullpath);
+        symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-admin", hFullpath);
 
         free(hFullpath);
 

@@ -9,7 +9,6 @@ typedef struct
 
 static cmd_t commands[] =
 {
-    {"helper-ssh", cmd_helper_ssh, cmd_helper_ssh_help},
     {"setup", cmd_setup, cmd_setup_help},
     {NULL, NULL, NULL}
 };

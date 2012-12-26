@@ -2,7 +2,6 @@
 #define SETUP_H_INCLUDED
 
 #define _NO_GIT2_PUSH
-#define _PUSH
 
 #include <git2.h>
 #include <libconfig.h>

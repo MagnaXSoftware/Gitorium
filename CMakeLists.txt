@@ -26,7 +26,7 @@ IF (NOT CMAKE_BUILD_TYPE)
 ENDIF ()
 
 # Specifics file
-CONFIGURE_FILE(src/specific.h.cmake src/specific.h)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/src/specific.h.cmake ${CMAKE_SOURCE_DIR}/src/specific.h)
 
 # Targets
 

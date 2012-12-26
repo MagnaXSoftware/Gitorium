@@ -5,6 +5,5 @@
 
 #include "../common.h"
 #include "setup.h"
-#include "helper_ssh.h"
 
 #endif // MAIN_H_INCLUDED

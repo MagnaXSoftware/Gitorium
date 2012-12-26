@@ -5,3 +5,4 @@ build
 build.log
 *.depend
 *.layout
+src/specific.h

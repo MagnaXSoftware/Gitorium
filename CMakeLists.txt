@@ -15,9 +15,6 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 # Build in build directory
 SET(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/build" CACHE PATH "Build directory" FORCE)
 
-# Install directory
-SET(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Installation prefix" FORCE)
-
 # Build Debug by default
 IF (NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)

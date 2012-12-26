@@ -5,13 +5,13 @@ static int ssh__reset()
     FILE *file;
     struct stat rStat;
     char *path = malloc(sizeof("/.ssh") + sizeof(char) * (strlen(getenv("HOME")) + 1));
-    strcat(strcpy(rcfile, getenv("HOME")), "/.ssh");
+    strcat(strcpy(path, getenv("HOME")), "/.ssh");
 
     if (!stat(path, &rStat))
         mkdir(path, S_IRWXU);
 
-    *path = realloc(*path, sizeof(char) * (strlen(path) + strlen("/authorized_keys") + 1));
-    strcat(*path, "/authorized_keys");
+    path = realloc(path, sizeof(char) * (strlen(path) + strlen("/authorized_keys") + 1));
+    strcat(path, "/authorized_keys");
 
     if ((file = fopen(path, "w")) == NULL)
     {
@@ -34,11 +34,10 @@ static int ssh__setup()
     git_reference *bHead, *bRealHead;
     git_commit *hCommit;
     git_tree *hTree, *kTree;
-    const git_oid oid;
 
     char *bFullpath, *rPath;
 
-    config_lookup_string(&aCfg, "repositories", &rPath);
+    config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
 
     bFullpath = malloc(sizeof("gitorium-admin.git") + sizeof(char)*(strlen(rPath)+1));
     strcat(strcpy(bFullpath, rPath), "gitorium-admin.git");
@@ -67,17 +66,16 @@ static int ssh__setup()
         return EXIT_FAILURE;
     }
 
-    &oid = git_reference_oid(bRealHead);
-
     git_reference_free(bHead);
-    git_reference_free(bRealHead);
 
-    if (git_commit_lookup(&hCommit, bRepo, const &oid))
+    if (git_commit_lookup(&hCommit, bRepo, git_reference_oid(bRealHead)))
     {
         PRINT_ERROR("Could not load the commit.")
         git_repository_free(bRepo);
         return EXIT_FAILURE;
     }
+
+    git_reference_free(bRealHead);
 
     if (git_commit_tree(&hTree, hCommit))
     {
@@ -87,7 +85,7 @@ static int ssh__setup()
         return EXIT_FAILURE;
     }
 
-    if (git_tree_get_subtree(&kTree, &hTree, "keys"))
+    if (git_tree_get_subtree(&kTree, hTree, "keys"))
     {
         PRINT_ERROR("Could not find the \"keys\" subtree in the main tree.")
         git_tree_free(hTree);
@@ -107,7 +105,7 @@ static int ssh__setup()
 
 int main(int argc, char **argv)
 {
-    for (int i = 0; i < argc, i++)
+    for (int i = 0; i < argc; i++)
     {
         puts(argv[i]);
     }

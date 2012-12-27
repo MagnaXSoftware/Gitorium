@@ -13,6 +13,10 @@ static int check_ref(char *ref, char *newid)
 
 int main(int argc, char **argv)
 {
+    int exit = EXIT_FAILURE;
+
+    gitorium_config_init();
+
     if (!strcmp("hooks/post-update", argv[0]))
     {
         // No error handling here because we must run the whole thing no matter what
@@ -20,18 +24,18 @@ int main(int argc, char **argv)
         {
             if (!strcmp("refs/heads/master", argv[i]))
             {
-                gitorium_config_init();
                 ssh_setup();
                 repo_update();
-                gitorium_config_close();
             }
         }
-        return 0;
+        exit = 0;
     }
     else if (!strcmp("hooks/update", argv[0]))
     {
-        return check_ref(argv[1], argv[3]);
+        exit = check_ref(argv[1], argv[3]);
     }
 
-    return 0;
+    gitorium_config_close();
+
+    return exit;
 }

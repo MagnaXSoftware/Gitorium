@@ -77,20 +77,20 @@ int main(int argc, char **argv)
     argv++;
     argc--;
 
-    if (gitorium_config_init())
-    {
-        PRINT_ERROR("Could not initialize the configuration.")
-        return EXIT_FAILURE;
-    }
+    int exit = EXIT_FAILURE;
+
+    gitorium_config_init();
 
     if ((argc == 0) || (argc == 1 && !strcmp("help", argv[0])))
     {
-        return run_cmd(main_help, argc, argv);
+        exit = run_cmd(main_help, argc, argv);
     }
     else
     {
-        return handle_command(argc, argv);
+        exit = handle_command(argc, argv);
     }
 
-    return EXIT_FAILURE;
+    gitorium_config_close();
+
+    return exit;
 }

@@ -7,16 +7,12 @@ int main(int argc, char **argv)
      *  * read repo configuration from admin repoS
      *  * run each hook for the current repo
      */
-
-    // We remove the name of the executable from the list
     argv++;
     argc--;
 
-    if (gitorium_config_init())
-    {
-        PRINT_ERROR("Could not initialize the configuration.")
-        return EXIT_FAILURE;
-    }
+    int exit = EXIT_FAILURE;
+
+    gitorium_config_init();
 
     // We receive arguments from git as such: name old_oid new_oid
     if (argc != 3)
@@ -28,5 +24,4 @@ int main(int argc, char **argv)
 
     gitorium_config_close();
 
-    return 0;
-}
+    return exit;}

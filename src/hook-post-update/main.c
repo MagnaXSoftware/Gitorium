@@ -10,13 +10,11 @@ int main(int argc, char **argv)
     argv++;
     argc--;
 
-    if (gitorium_config_init())
-    {
-        PRINT_ERROR("Could not initialize the configuration.")
-        return EXIT_FAILURE;
-    }
+    int exit = EXIT_FAILURE;
+
+    gitorium_config_init();
 
     gitorium_config_close();
 
-    return 0;
+    return exit;
 }

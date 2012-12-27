@@ -293,7 +293,6 @@ static int setup__admin_repo(char *pubkey)
 
         free(rUrl);
 
-        #ifdef PUSH
         #ifndef _NO_GIT2_PUSH
         if (git_remote_connect(rRemote, GIT_DIR_PUSH))
         {
@@ -312,7 +311,6 @@ static int setup__admin_repo(char *pubkey)
         #endif
 
         system("rm -rf .gitorium-admin/");
-        #endif
 
         git_remote_disconnect(rRemote);
         git_remote_free(rRemote);

@@ -29,14 +29,14 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
         return 0; // For some reason libgit2 walks from the root tree instead of our subtree
 
     FILE *auth;
-    git_object *object;
+    git_blob *blob;
     char *name = git_tree_entry_name(entry),
                  *path = malloc(sizeof(char) * (strlen(getenv("HOME")) + strlen("/.ssh/authorized_keys") + 1));
     name = strtok(name, ".");
 
     printf("Adding key %s ", name);
 
-    if (git_tree_entry_to_object(&object, payload, (const git_tree_entry*) entry))
+    if (git_blob_lookup(&blob, payload, git_tree_entry_id((const git_tree_entry*) entry)))
     {
         PRINT_ERROR("Could not load the key.")
         return 0;
@@ -48,10 +48,10 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
         return 0;
     }
 
-    fprintf(auth, "command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s", name, (char *) git_blob_rawcontent((struct git_blob *) object));
+    fprintf(auth, "command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s", name, (char *) git_blob_rawcontent(blob));
     fclose(auth);
 
-    git_object_free(object);
+    git_blob_free(blob);
 
     return 0;
 }

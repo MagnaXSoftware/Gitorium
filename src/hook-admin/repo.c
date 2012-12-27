@@ -123,7 +123,7 @@ int repo_update(void)
 
         struct stat rStat;
 
-        if (!stat(nFullpath, &rStat))
+        if (stat(nFullpath, &rStat))
         {
             git_repository *nRepo;
 

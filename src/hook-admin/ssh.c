@@ -4,16 +4,14 @@ static int ssh__reset(void)
 {
     FILE *file;
     struct stat rStat;
-    char *path = malloc(sizeof("/.ssh") + sizeof(char) * (strlen(getenv("HOME")) + 1));
-    strcat(strcpy(path, getenv("HOME")), "/.ssh");
+    char *path;
 
     if (!stat(path, &rStat))
         mkdir(path, S_IRWXU);
 
-    path = realloc(path, sizeof(char) * (strlen(path) + strlen("/authorized_keys") + 1));
-    strcat(path, "/authorized_keys");
+    config_lookup_string(&aCfg, "keyfile", (const char **)&path);
 
-    printf("Clearing file %s", path);
+    printf("Clearing file %s\n", path);
 
     if ((file = fopen(path, "w")) == NULL)
     {

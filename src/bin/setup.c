@@ -263,8 +263,8 @@ static int setup__admin_repo(char *pubkey)
 
         config_lookup_string(&aCfg, "repositories", &rPath);
 
-        rFullpath = malloc(sizeof("gitorium-admin.git") + sizeof(char)*(strlen(rPath)+1));
-        strcat(strcpy(rFullpath, rPath), "gitorium-admin.git");
+        rFullpath = malloc(sizeof("gitorium-admin") + sizeof(char)*(strlen(rPath)+1));
+        strcat(strcpy(rFullpath, rPath), "gitorium-admin");
 
         if (git_repository_init(&bRepo, rFullpath, 1))
         {

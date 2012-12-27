@@ -3,11 +3,7 @@
 static int ssh__reset(void)
 {
     FILE *file;
-    struct stat rStat;
     char *path;
-
-    if (!stat(path, &rStat))
-        mkdir(path, S_IRWXU);
 
     config_lookup_string(&aCfg, "keyfile", (const char **)&path);
 

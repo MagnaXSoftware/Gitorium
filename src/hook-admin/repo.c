@@ -116,7 +116,20 @@ int repo_update(void)
 
         config_setting_lookup_string(repo, "name", &name);
 
-        printf("Repo: %s\n", name);
+        char *nFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(name) + 1));
+        strcat(strcpy(nFullpath, rPath), name);
+
+        struct stat rStat;
+
+        if (!stat(nFullpath, &rStat))
+        {
+            git_repository *nRepo;
+
+            printf("Creating repo: %s\n", name);
+
+            git_repository_init(&nRepo, nFullpath, 1);
+            git_repository_free(nRepo);
+        }
     }
 
     config_destroy(&cfg);

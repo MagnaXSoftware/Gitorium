@@ -25,7 +25,34 @@ static int ssh__reset(void)
 
 static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 {
-    printf("[%s]: %s", root, git_tree_entry_name(entry));
+    if (!strcmp("keys/", root))
+        return 0; // For some reason libgit2 walks from the root tree instead of our subtree
+
+    FILE *auth;
+    git_object *object;
+    char *name = git_tree_entry_name(entry),
+                 *path = malloc(sizeof(char) * (strlen(getenv("HOME")) + strlen("/.ssh/authorized_keys") + 1));
+    name = strtok(name, ".");
+
+    printf("Adding key %s ", name);
+
+    if (git_tree_entry_to_object(&object, payload, (const git_tree_entry*) entry))
+    {
+        PRINT_ERROR("Could not load the key.")
+        return 0;
+    }
+
+    if ((auth = fopen(path, "a")) == NULL)
+    {
+        PRINT_ERROR("Could not open authorized keys file.")
+        return 0;
+    }
+
+    fprintf(auth, "command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s", name, (char *) git_blob_rawcontent((struct git_blob *) object));
+    fclose(auth);
+
+    git_object_free(object);
+
     return 0;
 }
 
@@ -96,11 +123,11 @@ int ssh_setup(void)
     }
 
     git_tree_free(hTree);
-        git_commit_free(hCommit);
+    git_commit_free(hCommit);
 
     ssh__reset();
 
-    git_tree_walk(kTree, ssh__add, GIT_TREEWALK_POST, NULL);
+    git_tree_walk(kTree, ssh__add, GIT_TREEWALK_POST, bRepo);
 
     git_tree_free(kTree);
     git_repository_free(bRepo);

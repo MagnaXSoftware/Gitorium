@@ -25,7 +25,7 @@ static int ssh__reset(void)
 
 static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 {
-    if (!strcmp("keys/", root))
+    if (strcmp("keys/", root))
         return 0; // For some reason libgit2 walks from the root tree instead of our subtree
 
     FILE *auth;
@@ -52,6 +52,8 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
     fclose(auth);
 
     git_blob_free(blob);
+
+    puts("Done.");
 
     return 0;
 }

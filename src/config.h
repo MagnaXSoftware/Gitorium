@@ -7,6 +7,8 @@
 
 #include "common.h"
 
+#define RC_FILE "/etc/gitorium/config.cfg"
+
 config_t aCfg;
 
 int gitorium_config_close(void);

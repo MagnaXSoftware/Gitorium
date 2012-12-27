@@ -10,7 +10,5 @@
 #define PRINT_ERROR(s) fprintf(stderr, s"\n");
 #define PRINTF_ERROR(s, f) fprintf(stderr, s"\n", f);
 
-#define RC_FILE "/etc/default/config.cfg"
-
 #endif // COMMON_H_INCLUDED
 

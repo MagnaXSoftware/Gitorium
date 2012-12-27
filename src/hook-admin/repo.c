@@ -17,8 +17,8 @@ int repo_update(void)
 
     config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
 
-    bFullpath = malloc(sizeof("gitorium-admin.git") + sizeof(char)*(strlen(rPath)+1));
-    strcat(strcpy(bFullpath, rPath), "gitorium-admin.git");
+    bFullpath = malloc(sizeof(ADMIN_REPO) + sizeof(char)*(strlen(rPath)+1));
+    strcat(strcpy(bFullpath, rPath), ADMIN_REPO);
 
     if (git_repository_open(&bRepo, bFullpath))
     {
@@ -116,8 +116,8 @@ int repo_update(void)
 
         config_setting_lookup_string(repo, "name", &name);
 
-        char *nFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(name) + 1));
-        strcat(strcpy(nFullpath, rPath), name);
+        char *nFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(name) + strlen(".git") + 1));
+        strcat(strcat(strcpy(nFullpath, rPath), name), ".git");
 
         struct stat rStat;
 

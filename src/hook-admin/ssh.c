@@ -64,8 +64,8 @@ int ssh_setup(void)
 
     config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
 
-    bFullpath = malloc(sizeof("gitorium-admin.git") + sizeof(char)*(strlen(rPath)+1));
-    strcat(strcpy(bFullpath, rPath), "gitorium-admin.git");
+    bFullpath = malloc(sizeof(ADMIN_REPO) + sizeof(char)*(strlen(rPath)+1));
+    strcat(strcpy(bFullpath, rPath), ADMIN_REPO);
 
     if (git_repository_open(&bRepo, bFullpath))
     {

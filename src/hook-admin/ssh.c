@@ -13,6 +13,8 @@ static int ssh__reset(void)
     path = realloc(path, sizeof(char) * (strlen(path) + strlen("/authorized_keys") + 1));
     strcat(path, "/authorized_keys");
 
+    printf("Clearing file %s", path);
+
     if ((file = fopen(path, "w")) == NULL)
     {
         PRINT_ERROR("Could not reset authorized keys.")
@@ -34,7 +36,7 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
                  *path = malloc(sizeof(char) * (strlen(getenv("HOME")) + strlen("/.ssh/authorized_keys") + 1));
     name = strtok(name, ".");
 
-    printf("Adding key %s ", name);
+    printf("Adding key %s...", name);
 
     if (git_blob_lookup(&blob, payload, git_tree_entry_id((const git_tree_entry*) entry)))
     {

@@ -353,7 +353,6 @@ static int setup__admin_repo(char *pubkey)
         waitpid(pID, NULL, 0);
         #endif
 
-        system("rm -rf .gitorium-admin/");
         pID = fork();
         if (pID == 0)                // child
         {

@@ -29,7 +29,7 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 
     config_lookup_string(&aCfg, "keyfile", (const char **)&path);
 
-    printf("Adding key %s...", name);
+    printf("Adding user %s\n", name);
 
     if (git_blob_lookup(&blob, payload, git_tree_entry_id((const git_tree_entry*) entry)))
     {
@@ -47,8 +47,6 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
     fclose(auth);
 
     git_blob_free(blob);
-
-    puts("Done.");
 
     return 0;
 }

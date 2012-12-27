@@ -1,11 +1,9 @@
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
-#include <stdlib.h>
-#include <libconfig.h>
-#include <string.h>
-
 #include "common.h"
+
+#include <libconfig.h>
 
 #define RC_FILE "/etc/gitorium/config.cfg"
 

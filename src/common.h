@@ -1,7 +1,11 @@
 #ifndef COMMON_H_INCLUDED
 #define COMMON_H_INCLUDED
 
+#define _GNU_SOURCE
+
+#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "config.h"
 #include "specific.h"

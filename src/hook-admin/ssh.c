@@ -11,8 +11,6 @@ static int ssh__reset(void)
 
     config_lookup_string(&aCfg, "keyfile", (const char **)&path);
 
-    printf("Clearing file %s\n", path);
-
     if ((file = fopen(path, "w")) == NULL)
     {
         PRINT_ERROR("Could not reset authorized keys.")
@@ -50,7 +48,6 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
     }
 
     fprintf(auth, "command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s\n", name, (char *) git_blob_rawcontent(blob));
-    printf("command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s\n", name, (char *) git_blob_rawcontent(blob));
     fclose(auth);
 
     git_blob_free(blob);

@@ -3,13 +3,12 @@
 
 #define _NO_GIT2_PUSH
 
+#include "../common.h"
+
 #include <git2.h>
 #include <libconfig.h>
 #include <sys/stat.h>
-#include <string.h>
 #include <unistd.h>
-
-#include "../common.h"
 
 int cmd_setup(int argc, char **argv);
 int cmd_setup_help(int argc, char **argv);

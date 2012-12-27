@@ -14,7 +14,7 @@
 #define PRINT_ERROR(s) fprintf(stderr, s"\n");
 #define PRINTF_ERROR(s, f) fprintf(stderr, s"\n", f);
 
-#define ADMIN_REPO "gitorium-admin"
+#define ADMIN_REPO "gitorium-admin.git"
 
 #endif // COMMON_H_INCLUDED
 

@@ -109,6 +109,8 @@ int repo_update(void)
 
     int count = config_setting_length(setting);
 
+    printf("%i repos\n", count);
+
     for (int i = 0; i < count; i++)
     {
         config_setting_t *repo = config_setting_get_elem(setting, i);

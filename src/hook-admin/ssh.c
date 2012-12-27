@@ -49,7 +49,8 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
         return 0;
     }
 
-    fprintf(auth, "command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s", name, (char *) git_blob_rawcontent(blob));
+    fprintf(auth, "command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s\n", name, (char *) git_blob_rawcontent(blob));
+    printf("command=\""CMAKE_INSTALL_PREFIX"/bin/gitorium-shell %s\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding %s\n", name, (char *) git_blob_rawcontent(blob));
     fclose(auth);
 
     git_blob_free(blob);

@@ -4,8 +4,7 @@ int main(int argc, char **argv)
 {
     /* This program will have to:
      *  * read main configuration
-     *  * read repo configuration from admin repo
-     *  * determine if user can push to this repo
+     *  * read repo configuration from admin repoS
      *  * run each hook for the current repo
      */
 
@@ -23,8 +22,11 @@ int main(int argc, char **argv)
     if (argc != 3)
     {
         PRINT_ERROR("We didn't start as an update hook!")
+        gitorium_config_close();
         return EXIT_FAILURE;
     }
+
+    gitorium_config_close();
 
     return 0;
 }

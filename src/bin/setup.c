@@ -86,6 +86,7 @@ static int setup__admin_repo(char *pubkey)
     const char *rPath;
     int size, result;
     struct stat rStat;
+    pid_t pID;
 
     strcpy(user, pubkey);
     if (user[0] == '*')
@@ -266,6 +267,25 @@ static int setup__admin_repo(char *pubkey)
         rFullpath = malloc(sizeof(ADMIN_REPO) + sizeof(char)*(strlen(rPath)+1));
         strcat(strcpy(rFullpath, rPath), ADMIN_REPO);
 
+        if (!stat(rFullpath, &rStat))
+        {
+            pID = fork();
+            if (pID == 0)                // child
+            {
+                execlp("rm", "rm", "-rf", rFullpath);
+                _exit(1);
+            }
+            else if (pID < 0)            // failed to fork
+            {
+                PRINT_ERROR("Failed to launch external program 'rm'.")
+                free(rFullpath);
+                git_repository_free(repo);
+                return EXIT_FAILURE;
+            }
+
+            waitpid(pID, NULL, 0);
+        }
+
         if (git_repository_init(&bRepo, rFullpath, 1))
         {
             PRINT_ERROR("Could not initialize the remote admin repository.")
@@ -302,7 +322,7 @@ static int setup__admin_repo(char *pubkey)
         free(rUrl);
 
         #ifndef _NO_GIT2_PUSH
-        if (git_remote_connect(rRemote, GIT_DIR_PUSH))
+        /*if (git_remote_connect(rRemote, GIT_DIR_PUSH))
         {
             PRINT_ERROR("Could not propagate the repository.")
             const git_error *err = giterr_last();
@@ -312,15 +332,44 @@ static int setup__admin_repo(char *pubkey)
             git_repository_free(repo);
             return EXIT_FAILURE;
         }
+
+        git_remote_disconnect(rRemote);*/
         #else
-        chdir(".gitorium-admin");
-        system("git push origin master");
-        chdir("..");
+        pID = fork();
+        if (pID == 0)                // child
+        {
+            chdir(".gitorium-admin");
+            execlp("git", "git", "push", "origin", "master");
+            _exit(1);
+        }
+        else if (pID < 0)            // failed to fork
+        {
+            PRINT_ERROR("Failed to launch external program 'git push'.")
+            git_remote_free(rRemote);
+            git_repository_free(repo);
+            return EXIT_FAILURE;
+        }
+
+        waitpid(pID, NULL, 0);
         #endif
 
         system("rm -rf .gitorium-admin/");
+        pID = fork();
+        if (pID == 0)                // child
+        {
+            execlp("rm", "rm", "-rf", ".gitorium-admin");
+            _exit(1);
+        }
+        else if (pID < 0)            // failed to fork
+        {
+            PRINT_ERROR("Failed to launch external program 'rm'.")
+            git_remote_free(rRemote);
+            git_repository_free(repo);
+            return EXIT_FAILURE;
+        }
 
-        git_remote_disconnect(rRemote);
+        waitpid(pID, NULL, 0);
+
         git_remote_free(rRemote);
         git_repository_free(repo);
         return 0;

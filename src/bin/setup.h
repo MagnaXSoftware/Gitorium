@@ -8,6 +8,7 @@
 #include <git2.h>
 #include <libconfig.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 int cmd_setup(int argc, char **argv);

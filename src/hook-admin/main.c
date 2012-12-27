@@ -14,6 +14,10 @@ int main(int argc, char **argv)
     }
     else if (!strcmp("hooks/update", argv[0]))
     {
+        for (int i = 0; i < argc; i++)
+        {
+            puts(argv[i]);
+        }
         return 0;
     }
 

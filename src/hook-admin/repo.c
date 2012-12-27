@@ -1,17 +1,38 @@
 #include "repo.h"
 
-int repo_update(void)
+static void repo__create(config_setting_t *repo)
 {
+    char *name, *nFullpath, *rPath;
+    struct stat rStat;
 
+    config_setting_lookup_string(repo, "name", (const char**) &name);
+
+    config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
+
+    nFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(name) + strlen(".git") + 1));
+    strcat(strcat(strcpy(nFullpath, rPath), name), ".git");
+
+    if (stat(nFullpath, &rStat))
+    {
+        git_repository *nRepo;
+
+        printf("Creating repo: %s\n", name);
+
+        git_repository_init(&nRepo, nFullpath, 1);
+        git_repository_free(nRepo);
+    }
+
+    free(nFullpath);
+}
+
+static int repo__load_config(char **confOut)
+{
     git_repository *bRepo;
     git_reference *bHead, *bRealHead;
     git_commit *hCommit;
     git_tree *hTree;
     git_tree_entry *conf;
     git_blob *blob;
-
-    config_t cfg;
-    config_setting_t *setting;
 
     char *bFullpath, *rPath;
 
@@ -82,10 +103,26 @@ int repo_update(void)
         return EXIT_FAILURE;
     }
 
-    char *confData = git_blob_rawcontent(blob);
+    *confOut = git_blob_rawcontent(blob);
+
+    git_blob_free(blob);
+    git_repository_free(bRepo);
+
+    return 0;
+}
+
+int repo_update(void)
+{
+    config_t cfg;
+    config_setting_t *setting;
+    char *confData;
     FILE *temp;
 
-    git_repository_free(bRepo);
+    if (repo__load_config(&confData))
+    {
+        PRINT_ERROR("Could not get repo configuration.")
+        return EXIT_FAILURE;
+    }
 
     config_init(&cfg);
 
@@ -109,29 +146,9 @@ int repo_update(void)
 
     int count = config_setting_length(setting);
 
-    printf("%i repos\n", count);
-
     for (int i = 0; i < count; i++)
     {
-        config_setting_t *repo = config_setting_get_elem(setting, i);
-        const char *name;
-
-        config_setting_lookup_string(repo, "name", &name);
-
-        char *nFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(name) + strlen(".git") + 1));
-        strcat(strcat(strcpy(nFullpath, rPath), name), ".git");
-
-        struct stat rStat;
-
-        if (stat(nFullpath, &rStat))
-        {
-            git_repository *nRepo;
-
-            printf("Creating repo: %s\n", name);
-
-            git_repository_init(&nRepo, nFullpath, 1);
-            git_repository_free(nRepo);
-        }
+        repo__create(config_setting_get_elem(setting, i));
     }
 
     config_destroy(&cfg);

@@ -5,19 +5,6 @@ int gitorium_config_close(void)
     config_destroy(&aCfg);
     return 0;
 }
-
-int gitorium_config_save(void)
-{
-    /* This won't work if we aren't sudo
-    if(!config_write_file(&aCfg, RC_FILE))
-    {
-        PRINT_ERROR("Could not save configuration file.")
-        gitorium_config_close();
-        return EXIT_FAILURE;
-    }*/
-    return 0;
-}
-
 int gitorium_config_init(void)
 {
     config_init(&aCfg);

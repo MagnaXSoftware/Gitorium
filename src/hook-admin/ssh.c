@@ -32,9 +32,10 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 
     FILE *auth;
     git_blob *blob;
-    char *name = git_tree_entry_name(entry),
-                 *path = malloc(sizeof(char) * (strlen(getenv("HOME")) + strlen("/.ssh/authorized_keys") + 1));
+    char *path, *name = git_tree_entry_name(entry);
     name = strtok(name, ".");
+
+    config_lookup_string(&aCfg, "keyfile", (const char **)&path);
 
     printf("Adding key %s...", name);
 

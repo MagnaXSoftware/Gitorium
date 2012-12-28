@@ -4,12 +4,15 @@
 #include "common.h"
 
 #include <libconfig.h>
+#include <git2.h>
+#include <sys/stat.h>
 
 #define RC_FILE "/etc/gitorium/config.cfg"
 
 config_t aCfg;
 
-int gitorium_config_close(void);
-int gitorium_config_init(void);
+void gitorium__config_close(void);
+void gitorium__config_init(void);
+int gitorium__repo_config_load(config_t *cfg);
 
 #endif // CONFIG_H_INCLUDED

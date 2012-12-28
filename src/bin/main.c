@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
     int exit = EXIT_FAILURE;
 
-    gitorium_config_init();
+    gitorium__config_init();
 
     if ((argc == 0) || (argc == 1 && !strcmp("help", argv[0])))
     {
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         exit = handle_command(argc, argv);
     }
 
-    gitorium_config_close();
+    gitorium__config_close();
 
     return exit;
 }

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 {
     int exit = EXIT_FAILURE;
 
-    gitorium_config_init();
+    gitorium__config_init();
 
     if (!strcmp("hooks/post-update", argv[0]))
     {
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         exit = check_ref(argv[1], argv[3]);
     }
 
-    gitorium_config_close();
+    gitorium__config_close();
 
     return exit;
 }

@@ -12,9 +12,9 @@ int main(int argc, char **argv)
 
     int exit = EXIT_FAILURE;
 
-    gitorium_config_init();
+    gitorium__config_init();
 
-    gitorium_config_close();
+    gitorium__config_close();
 
     return exit;
 }

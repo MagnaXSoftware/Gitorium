@@ -22,10 +22,5 @@
 
 #define ADMIN_REPO "gitorium-admin.git"
 
-#define PERM_NO_ACCESS  0
-#define PERM_READ       (1 << 0)
-#define PERM_WRITE      (1 << 1)
-#define PERM_FORCE      (1 << 2)
-
 #endif // COMMON_H_INCLUDED
 

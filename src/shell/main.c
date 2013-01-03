@@ -53,63 +53,6 @@ static void split_args(char ***args, char *str)
     *args = res;
 }
 
-static int compare_perms(const int required, const char *givenPerms)
-{
-    int permCode = PERM_NO_ACCESS;
-    for (unsigned int i = 0; i < strlen(givenPerms); i++)
-    {
-        if ('R' == givenPerms[i])
-            permCode |= PERM_READ;
-        if ('W' == givenPerms[i])
-            permCode |= PERM_WRITE;
-        if ('F' == givenPerms[i])
-            permCode |= PERM_FORCE;
-    }
-    return !((permCode & required) == required);
-}
-
-static int check_perms(const config_setting_t *perms, const int required, const char *user, const config_setting_t *groups)
-{
-    char *givenPerms;
-
-    if (CONFIG_TRUE == config_setting_lookup_string(perms, user, (const char **) &givenPerms))
-        return compare_perms(required, (const char *) givenPerms);
-
-    for (int i = 0; i < config_setting_length(perms); i++)
-    {
-        char *group = (char *) config_setting_name(config_setting_get_elem(perms, i));
-
-        if ('*' != group[0])
-            continue;
-
-        if (!strcmp(group, "*all"))
-            continue;
-
-        config_setting_t *members = config_setting_get_member(groups, (const char*) group);
-        int out = 1;
-
-        for (int j = 0; j < config_setting_length(members); j++)
-        {
-            if (!strcmp(config_setting_get_string_elem(members, j), user))
-            {
-                out = 0;
-                break;
-            }
-        }
-
-        if (out)
-        	continue;
-
-        if (CONFIG_TRUE == config_setting_lookup_string(perms, group, (const char **) &givenPerms))
-            return compare_perms(required, (const char *) givenPerms);
-    }
-
-    if (CONFIG_TRUE == config_setting_lookup_string(perms, "*all", (const char **) &givenPerms))
-        return compare_perms(required, (const char *) givenPerms);
-
-    return EXIT_FAILURE;
-}
-
 static struct commands
 {
     const char *name;
@@ -122,7 +65,7 @@ static struct commands
     { NULL },
 };
 
-static int run_git_cmd(char *user, char *orig)
+static int run_non_interactive(const char *user, char *orig)
 {
     char **args, *rPath;
 
@@ -179,7 +122,7 @@ static int run_git_cmd(char *user, char *orig)
             if (strcmp(name, mName))
                 continue;
 
-            if (check_perms(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
+            if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
             {
                 config_destroy(&cfg);
                 free(imName);
@@ -214,7 +157,7 @@ static int run_git_cmd(char *user, char *orig)
     return EXIT_FAILURE;
 }
 
-static int run_shell(char *user)
+static int run_interactive(char *user)
 {
     int done = 0;
 
@@ -233,7 +176,8 @@ static int run_shell(char *user)
 
         split_args(&args, line);
 
-        if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit"))
+        if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit") ||
+            !strcmp(args[0], "logout") || !strcmp(args[0], "bye"))
         {
             done = 1;
 //        } else if (is_remote_command_valid(args[0])) {
@@ -272,12 +216,12 @@ int main(int argc, char **argv)
         if (NULL == soc)
         {
             // Running interactive (first argument is the user's name)
-            exit = run_shell(argv[0]);
+            exit = run_interactive(argv[0]);
         }
         else
         {
             // Running non-interactive (only support git commands ATM)
-            exit = run_git_cmd(argv[0], soc);
+            exit = run_non_interactive(argv[0], soc);
         }
 
         gitorium__config_close();

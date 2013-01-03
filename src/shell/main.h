@@ -4,8 +4,8 @@
 #define LINE_BUFFER_SIZE 50
 
 #include "../common.h"
+#include "perms.h"
 
-#include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
 

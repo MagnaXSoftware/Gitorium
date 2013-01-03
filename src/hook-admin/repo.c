@@ -20,6 +20,16 @@ static void hook_admin__repo_create(config_setting_t *repo)
 
         git_repository_init(&nRepo, nFullpath, 1);
         git_repository_free(nRepo);
+
+        char *hFullpath = malloc(sizeof(char) * (strlen(nFullpath) + strlen("/hooks/post-update") + 1));
+        strcat(strcpy(hFullpath, nFullpath), "/hooks/post-update");
+        symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-post-update", hFullpath);
+
+        hFullpath = realloc(hFullpath, sizeof(char) * (strlen(nFullpath) + strlen("/hooks/update") + 1));
+        strcat(strcpy(hFullpath, nFullpath), "/hooks/update");
+        symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-update", hFullpath);
+
+        free(hFullpath);
     }
 
     free(nFullpath);

@@ -57,11 +57,12 @@ static struct commands
 {
     const char *name;
     const int perms;
+    const char *dir;
 } cmd_list[] =
 {
-    { "git-receive-pack", PERM_WRITE },
-    { "git-upload-pack", PERM_READ },
-    { "git-upload-archive", PERM_READ },
+    { "git-receive-pack",   PERM_WRITE, "push" },
+    { "git-upload-pack",    PERM_READ , "pull" },
+    { "git-upload-archive", PERM_READ , "pull" },
     { NULL },
 };
 
@@ -136,6 +137,7 @@ static int run_non_interactive(const char *user, char *orig)
         {
             char *rFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(mName) + 4 + 1));
             strcat(strcat(strcpy(rFullpath, rPath), mName), ".git");
+            setenv("GITORIUM_USER", user, 1); // THat way we know who is accessing the shell
             execlp(cmd->name, cmd->name, rFullpath, (char *) NULL);
             _exit(1);
         }

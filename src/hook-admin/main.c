@@ -3,10 +3,10 @@
 static int check_ref(char *ref, char *newid)
 {
     if (strcmp("refs/heads/master", ref))
-        return 0;
+        return 0; // We don't care about refs that aren't the master.
 
     if (!strcmp("0000000000000000000000000000000000000000", newid))
-        return EXIT_FAILURE;
+        return EXIT_FAILURE; // No one can delete the master. Ever.
 
     return 0;
 }

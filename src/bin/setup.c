@@ -321,19 +321,17 @@ static int setup__admin_repo(char *pubkey)
 
         free(rUrl);
 
-        #ifndef _NO_GIT2_PUSH
-        /*if (git_remote_connect(rRemote, GIT_DIR_PUSH))
+        #ifndef _NO_GIT2_PUSH  // libgit2 cannot push repositories ATM, so we must fork and call git itself.
+        if (git_remote_connect(rRemote, GIT_DIR_PUSH))
         {
-            PRINT_ERROR("Could not propagate the repository.")
-            const git_error *err = giterr_last();
-            fprintf(stderr, "%s\n", err->message);
+            PRINT_ERROR("Could not push the repository.")
             git_remote_disconnect(rRemote);
             git_remote_free(rRemote);
             git_repository_free(repo);
             return EXIT_FAILURE;
         }
 
-        git_remote_disconnect(rRemote);*/
+        git_remote_disconnect(rRemote);
         #else
         pID = fork();
         if (pID == 0)                // child
@@ -362,6 +360,7 @@ static int setup__admin_repo(char *pubkey)
         else if (pID < 0)            // failed to fork
         {
             PRINT_ERROR("Failed to launch external program 'rm'.")
+            PRINT_ERROR("Please remove the .gitorium-admin directory manually.")
             git_remote_free(rRemote);
             git_repository_free(repo);
             return EXIT_FAILURE;

@@ -5,6 +5,7 @@
 
 #include <libconfig.h>
 #include <git2.h>
+#include <unistd.h>
 
 int repo_update(void);
 

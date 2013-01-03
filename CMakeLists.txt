@@ -29,7 +29,7 @@ ENDIF ()
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/src/specific.h.cmake ${CMAKE_SOURCE_DIR}/src/specific.h)
 
 # Targets
-
+INSTALL(FILES data/config.cfg DESTINATION /etc/gitorium/config.cfg)
 INCLUDE_DIRECTORIES(src src/bin src/shell src/hook-admin src/hook-update src/hook-post-update)
 
 ADD_SUBDIRECTORY(src/bin)

@@ -24,7 +24,7 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 
     FILE *auth;
     git_blob *blob;
-    char *path, *name = git_tree_entry_name(entry);
+    char *path, *name = (char *) git_tree_entry_name(entry);
     name = strtok(name, ".");
 
     config_lookup_string(&aCfg, "keyfile", (const char **)&path);

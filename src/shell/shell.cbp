@@ -28,9 +28,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../config.h" />
-		<Unit filename="shell.c">
+		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="main.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

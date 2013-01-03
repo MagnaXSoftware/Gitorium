@@ -11,8 +11,14 @@ static int check_ref(char *ref, char *newid)
     return 0;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv, char** envp)
 {
+    char** env;
+    for (env = envp; *env != 0; env++)
+    {
+        char* thisEnv = *env;
+        printf("%s\n", thisEnv);
+    }
     int exit = EXIT_FAILURE;
 
     gitorium__config_init();

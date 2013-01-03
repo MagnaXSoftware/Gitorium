@@ -81,7 +81,7 @@ int gitorium__repo_config_load(config_t *cfg)
 
     git_commit_free(hCommit);
 
-    if ((conf = git_tree_entry_byname(hTree, "gitorium.conf")) == NULL)
+    if ((conf = (git_tree_entry *) git_tree_entry_byname(hTree, "gitorium.conf")) == NULL)
     {
         PRINT_ERROR("Could not load the repo configuration.")
         git_tree_free(hTree);

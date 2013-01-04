@@ -53,7 +53,7 @@ static void split_args(char ***args, char *str)
     *args = res;
 }
 
-static struct commands
+static struct git_exec
 {
     const char *name;
     const int perms;
@@ -106,7 +106,7 @@ static int run_non_interactive(const char *user, char *orig)
     if (!strcmp(".git", &mName[strlen(mName)-4]))
         mName[strlen(mName)-4] = 0;
 
-    for (struct commands *cmd = cmd_list; cmd->name ; cmd++)
+    for (struct git_exec *cmd = cmd_list; cmd->name ; cmd++)
     {
         if (strcmp(cmd->name, args[0]))
             continue;

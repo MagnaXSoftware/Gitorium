@@ -12,7 +12,6 @@
 				<Option object_output="Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="setup admin.pub" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -36,6 +35,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../config.h" />
+		<Unit filename="../perms.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../perms.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

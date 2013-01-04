@@ -32,6 +32,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.h" />
+		<Unit filename="../perms.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../perms.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

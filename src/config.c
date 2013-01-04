@@ -101,6 +101,7 @@ int gitorium__repo_config_load(config_t *cfg)
     if (!config_read_string(cfg, git_blob_rawcontent(blob)))
     {
         PRINT_ERROR("Could not read the repo configuration.")
+        PRINTF_FATAL("%s", config_error_text(cfg))
         git_blob_free(blob);
         git_repository_free(bRepo);
         return EXIT_FAILURE;

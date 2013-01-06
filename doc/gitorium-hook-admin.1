@@ -1,0 +1,31 @@
+.TH GITORIUM-HOOK-ADMIN 1 "January 6, 2013" "Gitorium" "Gitorium Manual"
+.SH NAME
+gitorium-hook-admin \- Hook for the administration repository
+.SH SYNOPSIS
+.sp
+\fBgitorium-hook-admin
+.sp
+.SH DESCRIPTION
+.sp
+\fBgitorium-hook-admin\fR is a special hook that is added to the
+administration repository to run on both update and post-update.
+.sp
+In update mode, it checks that the master ref is not deleted, but
+otherwise lets anything fly.
+.sp
+In post-update mode, it reads the gitorium.conf file to create any
+missing repository and re-generates the \fIauthorized_keys\fR file. 
+.sp
+In git mode, only 3 git commands are available: 
+.BR git-receive-pack (1),
+.BR git-upload-pack (1),
+.BR git-upload-archive (1).
+Git mode is triggered by git users pushing or pulling over ssh and is 
+only accessible by the git program.
+.sp
+It is possible to disable the interactive shell through the
+configuration or by using \fBgitorium config set interactive bfalse\fR.
+.sp
+.SH "SEE ALSO"
+.BR gitorium-hooks (1),
+.BR githooks (5)

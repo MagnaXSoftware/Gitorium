@@ -1,0 +1,35 @@
+.TH GITORIUM-SHELL 1 "January 6, 2013" "Gitorium" "Gitorium Manual"
+.SH NAME
+gitorium-shell \- Special shell for gitorium
+.SH SYNOPSIS
+.sp
+\fBgitorium-shell\fR \fIuser
+.br
+\fBgitorium-shell\fR \fIuser\fR \fIcommand\fR [...]
+.sp
+.SH DESCRIPTION
+.sp
+\fBgitorium-shell\fR provides a jailed shell for the git users. Since
+the repositories are not stored in the \fIgit\fR user's home, gitorium
+has to translate the path of the repositories before calling the git
+commands. The shell also provides authorization.
+.sp
+By default, there are two modes available: the interactive mode and the
+git mode. In interactive mode, only gitorium commands are accepted, but
+it mascarades as a regular shell. 
+.sp
+In git mode, only 3 git commands are available: 
+.BR git-receive-pack "(1), "
+.BR git-upload-pack "(1) and "
+.BR git-upload-archive "(1)."
+Git mode is triggered by git users pushing or pulling over ssh and is 
+only accessible by the git program.
+.sp
+It is possible to disable the interactive shell through the
+configuration or by using \fBgitorium config set interactive bfalse\fR.
+.sp
+.SH OPTIONS
+.TP
+.BR user
+The user gitorium will authorize (authorization will occur for that
+user).

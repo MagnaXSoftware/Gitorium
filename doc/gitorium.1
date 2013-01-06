@@ -1,0 +1,37 @@
+.TH GITORIUM 1 "January 6, 2013" "Gitorium" "Gitorium Manual"
+.SH NAME
+gitorium \- Gatekeeper and repository management for git
+.SH SYNOPSIS
+.sp
+\fBgitorium\fR \fIcommand\fR [...]
+.sp
+.SH DESCRIPTION
+.sp
+\fBgitorium\fR is the command line interface to the git repositories
+and the gitorium system itself. It allows for stuff such as resetting
+the administration repository, listing all the currently defined users,
+groups or repository.
+.sp
+Due to permission issues, you should always run gitorium from the
+\fIgit\fR user. The other option would be to make the
+\fI/var/repository\fR directory group or world writtable, but that
+wouldn't be very secure.
+.sp
+.SH OPTIONS
+.sp
+The following default commands are included with gitorium. The list of
+your current commands can always be fetched using the \fIhelp\fR
+command.
+.TP
+.BR help\fR [\fIkeyword\fR]
+Displays the help and usage text for the specified keyword or for
+\fBgitorium\fR itself if no keyword is given.
+.TP
+.B setup\fR [\fB\-\-force\fR] \fIkeyfile
+Sets up gitorium by creating the \fIgitorium-admin\fR repository, and
+adds the user represented by \fIkeyfile\fR as the main administrator.
+.sp
+If the administration repository already exist and the \fBforce\fR
+option is given, gitorium will wipe the current administration
+repository and reset it.
+.sp

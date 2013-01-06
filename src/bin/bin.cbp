@@ -22,14 +22,18 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 		</Compiler>
+		<Unit filename="cmd_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cmd_config.h" />
+		<Unit filename="cmd_setup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cmd_setup.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.h" />
-		<Unit filename="setup.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="setup.h" />
 		<Unit filename="../common.h" />
 		<Unit filename="../config.c">
 			<Option compilerVar="CC" />

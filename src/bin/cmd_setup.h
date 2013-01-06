@@ -1,5 +1,5 @@
-#ifndef SETUP_H_INCLUDED
-#define SETUP_H_INCLUDED
+#ifndef CMD_SETUP_H_INCLUDED
+#define CMD_SETUP_H_INCLUDED
 
 #define _NO_GIT2_PUSH
 
@@ -14,4 +14,4 @@
 int cmd_setup(int argc, char **argv);
 int cmd_setup_help(int argc, char **argv);
 
-#endif // SETUP_H_INCLUDED
+#endif // CMD_SETUP_H_INCLUDED

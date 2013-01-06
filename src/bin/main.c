@@ -9,7 +9,8 @@ typedef struct
 
 static cmd_t commands[] =
 {
-    {"setup", cmd_setup, cmd_setup_help},
+    {"setup",   cmd_setup,  cmd_setup_help},
+    {"config",  cmd_config, cmd_config_help},
     {NULL, NULL, NULL}
 };
 

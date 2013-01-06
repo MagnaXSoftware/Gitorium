@@ -1,4 +1,4 @@
-#include "setup.h"
+#include "cmd_setup.h"
 
 static void setup__generate_conf(char **fullconf, char *user)
 {
@@ -17,7 +17,7 @@ static void setup__generate_conf(char **fullconf, char *user)
         " */\n"
         "groups:\n"
         "{\n"
-        "   *admins = [\"",
+        "    *admins = [\"",
         "\"];\n"
         "};\n"
         "\n"
@@ -49,14 +49,14 @@ static void setup__generate_conf(char **fullconf, char *user)
         " */\n"
         "repositories:\n"
         "(\n"
-        "   {\n"
-        "       name = \"gitorium-admin\";\n"
-        "       perms = {\n"
-        "           ",
+        "    {\n"
+        "        name = \"gitorium-admin\";\n"
+        "        perms = {\n"
+        "            ",
         " = \"RW\"\n"
-        "           *admins = \"RW\"\n"
-        "       }\n"
-        "   }\n"
+        "            *admins = \"RW\"\n"
+        "        }\n"
+        "    }\n"
         ");\n"
     };
 
@@ -71,7 +71,7 @@ static void setup__generate_conf(char **fullconf, char *user)
     }
 }
 
-static int setup__admin_repo(char *pubkey)
+static int setup__admin_repo(char *pubkey, int force)
 {
     git_repository *repo, *bRepo;
     git_remote *rRemote;
@@ -87,6 +87,21 @@ static int setup__admin_repo(char *pubkey)
     int size, result;
     struct stat rStat;
     pid_t pID;
+
+    config_lookup_string(&aCfg, "repositories", &rPath);
+
+    rFullpath = malloc(sizeof(ADMIN_REPO) + sizeof(char)*(strlen(rPath)+1));
+    strcat(strcpy(rFullpath, rPath), ADMIN_REPO);
+
+    if (!stat(rFullpath, &rStat))
+    {
+        // admin repo exists
+        if (!force)
+        {
+            error("Administration repo already exists. Use --force to overwrite it.")
+            return EXIT_FAILURE;
+        }
+    }
 
     strcpy(user, pubkey);
     if (user[0] == '*')
@@ -262,11 +277,6 @@ static int setup__admin_repo(char *pubkey)
 
         //push the commit to origin
 
-        config_lookup_string(&aCfg, "repositories", &rPath);
-
-        rFullpath = malloc(sizeof(ADMIN_REPO) + sizeof(char)*(strlen(rPath)+1));
-        strcat(strcpy(rFullpath, rPath), ADMIN_REPO);
-
         if (!stat(rFullpath, &rStat))
         {
             pID = fork();
@@ -393,14 +403,18 @@ int cmd_setup(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    if (!setup__admin_repo(argv[0]))
+    int result;
+
+    if (!strcmp("--force", argv[0]))
     {
-        return 0;
+        result = setup__admin_repo(argv[1], 1);
     }
     else
-        error("Could not initialize the admin repository.");
+    {
+        result = setup__admin_repo(argv[0], 0);
+    }
 
-    return EXIT_FAILURE;
+    return result;
 }
 
 int cmd_setup_help(int argc, char **argv)

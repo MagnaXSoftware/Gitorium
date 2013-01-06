@@ -100,6 +100,56 @@ static int config__get_key(const char *key)
     return EXIT_FAILURE;
 }
 
+static int config__set_key(const char *key, char *value)
+{
+    config_setting_t *root = config_root_setting(&aCfg), *setting = config_lookup(&aCfg, key);
+    int result = EXIT_FAILURE;
+    char type = value[0];
+    value++;
+
+    switch (type)
+    {
+    	case 'i':
+            if (NULL == setting)
+                setting = config_setting_add(root, key, CONFIG_TYPE_INT);
+
+            result = (CONFIG_TRUE == config_setting_set_int(setting, atoi((const char *) value)));
+    		break;
+    	case 'l':
+            if (NULL == setting)
+                setting = config_setting_add(root, key, CONFIG_TYPE_INT64);
+
+            result = (CONFIG_TRUE == config_setting_set_int64(setting, atoll((const char *) value)));
+    		break;
+    	case 'f':
+            if (NULL == setting)
+                setting = config_setting_add(root, key, CONFIG_TYPE_FLOAT);
+
+            result = (CONFIG_TRUE == config_setting_set_float(setting, strtod((const char *) value, (char **) NULL)));
+    		break;
+    	case 'b':
+            if (NULL == setting)
+                setting = config_setting_add(root, key, CONFIG_TYPE_BOOL);
+
+            result = (CONFIG_TRUE == config_setting_set_bool(setting, (value[0] == 'f') ? 0 : 1));
+    		break;
+    	case 's':
+            if (NULL == setting)
+                setting = config_setting_add(root, key, CONFIG_TYPE_STRING);
+
+            result = (CONFIG_TRUE == config_setting_set_string(setting, (const char *) value));
+    		break;
+    	default:
+            error("I don't know what value type you added.")
+    		return EXIT_FAILURE;
+    }
+
+    if (!result)
+        return (CONFIG_TRUE == config_write_file(&aCfg, RC_FILE));
+
+    return result;
+}
+
 int cmd_config(int argc, char **argv)
 {
     // We remove the name of the executable from the list
@@ -114,8 +164,10 @@ int cmd_config(int argc, char **argv)
 
     if (!strcmp("list", argv[0]))
         return config__list_keys();
-    else if (!strcmp("get", argv[0]) && argc > 1)
+    else if (!strcmp("get", argv[0]) && 2 == argc)
         return config__get_key(argv[1]);
+    else if (!strcmp("set", argv[0]) && 3 == argc)
+        return config__set_key(argv[1], argv[2]);
     else
         cmd_config_help(argc, argv);
 

@@ -14,6 +14,8 @@ int main(int argc, char **argv)
 
     gitorium__config_init();
 
+    exit = 0;
+
     gitorium__config_close();
 
     return exit;

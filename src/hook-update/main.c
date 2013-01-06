@@ -18,8 +18,10 @@ int main(int argc, char **argv)
     if (argc != 3)
     {
         error("We didn't start as an update hook!")
-        gitorium__config_close();
-        return EXIT_FAILURE;
+    }
+    else
+    {
+        exit = 0;
     }
 
     gitorium__config_close();

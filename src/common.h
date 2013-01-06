@@ -12,13 +12,13 @@
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
-#define PRINT_ERROR(string)             PRINTF_ERROR("%s", string)
-#define PRINTF_ERROR(format, string)    fprintf(stderr, format"\n", string);
+#define error(string)          errorf("%s", string)
+#define errorf(format, ...)    fprintf(stderr, format"\n", __VA_ARGS__);
 
-#define PRINT_DEBUG(string)             PRINT_ERROR("debug: "string)
-#define PRINTF_DEBUG(format, string)    PRINTF_ERROR("debug: "format, string)
-#define PRINT_FATAL(string)             PRINT_ERROR("fatal: "string)
-#define PRINTF_FATAL(format, string)    PRINTF_ERROR("fatal: "format, string)
+#define debug(string)          error("debug: "string)
+#define debugf(format, ...)    errorf("debug: "format, __VA_ARGS__)
+#define fatal(string)          error("fatal: "string)
+#define fatalf(format, ...)    errorf("fatal: "format, __VA_ARGS__)
 
 #define ADMIN_REPO "gitorium-admin.git"
 

@@ -43,14 +43,14 @@ int repo_update(void)
     config_init(&cfg);
     if (gitorium__repo_config_load(&cfg))
     {
-        PRINT_ERROR("Could not get repo configuration.")
+        error("Could not get repo configuration.")
         config_destroy(&cfg);
         return EXIT_FAILURE;
     }
 
     if ((setting = config_lookup(&cfg, "repositories")) == NULL)
     {
-        PRINT_ERROR("Could not load the repositories.")
+        error("Could not load the repositories.")
         config_destroy(&cfg);
         return EXIT_FAILURE;
     }

@@ -89,7 +89,7 @@ static int run_non_interactive(const char *user, char *orig)
 
     if ((setting = config_lookup(&cfg, "repositories")) == NULL)
     {
-        PRINT_FATAL("could not load the repository list")
+        fatal("could not load the repository list")
         config_destroy(&cfg);
         return EXIT_FAILURE;
     }
@@ -127,7 +127,7 @@ static int run_non_interactive(const char *user, char *orig)
             {
                 config_destroy(&cfg);
                 free(imName);
-                PRINT_FATAL("insufficient permissions")
+                fatal("insufficient permissions")
                 return EXIT_FAILURE;
             }
         }
@@ -143,7 +143,7 @@ static int run_non_interactive(const char *user, char *orig)
         }
         else if (pID < 0)            // failed to fork
         {
-            PRINTF_FATAL("failed to launch %s", cmd->name)
+            fatalf("failed to launch %s", cmd->name)
             free(imName);
             config_destroy(&cfg);
             return EXIT_FAILURE;

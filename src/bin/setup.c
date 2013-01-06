@@ -91,7 +91,7 @@ static int setup__admin_repo(char *pubkey)
     strcpy(user, pubkey);
     if (user[0] == '*')
     {
-        PRINT_ERROR("Users cannot begin with *. Please rename the file.")
+        error("Users cannot begin with *. Please rename the file.")
         return EXIT_FAILURE;
     }
     user = strtok(user, ".");
@@ -105,7 +105,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_repository_init(&repo, ".gitorium-admin", 0))
         {
-            PRINT_ERROR("Could initialize a new administration repository.")
+            error("Could initialize a new administration repository.")
             fclose(pFile);
             free(conf);
             return EXIT_FAILURE;
@@ -113,7 +113,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_create(&rcBuilder, NULL))
         {
-            PRINT_ERROR("Could not create keys tree builder.")
+            error("Could not create keys tree builder.")
             git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             fclose(pFile);
@@ -129,7 +129,7 @@ static int setup__admin_repo(char *pubkey)
         buffer = malloc(sizeof(char) * size);
         if (buffer == NULL)
         {
-            PRINT_ERROR("Could not copy the public key.")
+            error("Could not copy the public key.")
             free(buffer);
             git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
@@ -141,7 +141,7 @@ static int setup__admin_repo(char *pubkey)
         result = fread(buffer, sizeof(char), size, pFile);
         if (result != size)
         {
-            PRINT_ERROR("Could not copy the public key.")
+            error("Could not copy the public key.")
             free(buffer);
             git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
@@ -154,7 +154,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_blob_create_frombuffer(&iOid, repo, buffer, sizeof(char)*size))
         {
-            PRINT_ERROR("Could not create the administrator's public key.")
+            error("Could not create the administrator's public key.")
             free(buffer);
             git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
@@ -166,7 +166,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_insert(NULL, rcBuilder, pubkey, &iOid, 0100644))
         {
-            PRINT_ERROR("Could not insert the administrator's public key.")
+            error("Could not insert the administrator's public key.")
             git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             free(conf);
@@ -175,7 +175,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_write(&iOid, repo, rcBuilder))
         {
-            PRINT_ERROR("Could not write the tree to index.")
+            error("Could not write the tree to index.")
             git_treebuilder_free(rcBuilder);
             git_repository_free(repo);
             free(conf);
@@ -186,7 +186,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_create(&rBuilder, NULL))
         {
-            PRINT_ERROR("Could not create a tree builder.")
+            error("Could not create a tree builder.")
             git_treebuilder_free(rBuilder);
             git_repository_free(repo);
             free(conf);
@@ -195,7 +195,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_insert(NULL, rBuilder, "keys", &iOid, 040000))
         {
-            PRINT_ERROR("Could not insert the keys tree.")
+            error("Could not insert the keys tree.")
             git_treebuilder_free(rBuilder);
             git_repository_free(repo);
             free(conf);
@@ -204,7 +204,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_blob_create_frombuffer(&iOid, repo, conf, sizeof(char)*strlen(conf)))
         {
-            PRINT_ERROR("Could not create the administration file.")
+            error("Could not create the administration file.")
             git_treebuilder_free(rBuilder);
             git_repository_free(repo);
             free(conf);
@@ -213,7 +213,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_insert(NULL, rBuilder, "gitorium.conf", &iOid, 0100644))
         {
-            PRINT_ERROR("Could not insert the administration file.")
+            error("Could not insert the administration file.")
             git_treebuilder_free(rBuilder);
             git_repository_free(repo);
             free(conf);
@@ -224,7 +224,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_treebuilder_write(&iOid, repo, rBuilder))
         {
-            PRINT_ERROR("Could not write the tree to index.")
+            error("Could not write the tree to index.")
             git_treebuilder_free(rBuilder);
             git_repository_free(repo);
             return EXIT_FAILURE;
@@ -234,7 +234,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_tree_lookup(&rTree, repo, &iOid))
         {
-            PRINT_ERROR("Could not write the tree to index.")
+            error("Could not write the tree to index.")
             git_tree_free(rTree);
             git_repository_free(repo);
             return EXIT_FAILURE;
@@ -242,7 +242,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_signature_now(&rAuthor, "Gitorium", "Gitorium@local"))
         {
-            PRINT_ERROR("Could not create a commit author.")
+            error("Could not create a commit author.")
             git_tree_free(rTree);
             git_repository_free(repo);
             return EXIT_FAILURE;
@@ -250,7 +250,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_commit_create(&iOid, repo, "HEAD", rAuthor, rAuthor, NULL, "Initial Configuration", rTree, 0, NULL))
         {
-            PRINT_ERROR("Could not create the commit.")
+            error("Could not create the commit.")
             git_signature_free(rAuthor);
             git_tree_free(rTree);
             git_repository_free(repo);
@@ -277,7 +277,7 @@ static int setup__admin_repo(char *pubkey)
             }
             else if (pID < 0)            // failed to fork
             {
-                PRINT_ERROR("Failed to launch external program 'rm'.")
+                error("Failed to launch external program 'rm'.")
                 free(rFullpath);
                 git_repository_free(repo);
                 return EXIT_FAILURE;
@@ -288,7 +288,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_repository_init(&bRepo, rFullpath, 1))
         {
-            PRINT_ERROR("Could not initialize the remote admin repository.")
+            error("Could not initialize the remote admin repository.")
             free(rFullpath);
             git_repository_free(repo);
             return EXIT_FAILURE;
@@ -312,7 +312,7 @@ static int setup__admin_repo(char *pubkey)
 
         if (git_remote_add(&rRemote, repo, "origin", rUrl))
         {
-            PRINT_ERROR("Could not add the bare repository as remote.")
+            error("Could not add the bare repository as remote.")
             git_remote_free(rRemote);
             free(rUrl);
             git_repository_free(repo);
@@ -324,7 +324,7 @@ static int setup__admin_repo(char *pubkey)
         #ifndef _NO_GIT2_PUSH  // libgit2 cannot push repositories ATM, so we must fork and call git itself.
         if (git_remote_connect(rRemote, GIT_DIR_PUSH))
         {
-            PRINT_ERROR("Could not push the repository.")
+            error("Could not push the repository.")
             git_remote_disconnect(rRemote);
             git_remote_free(rRemote);
             git_repository_free(repo);
@@ -342,7 +342,7 @@ static int setup__admin_repo(char *pubkey)
         }
         else if (pID < 0)            // failed to fork
         {
-            PRINT_ERROR("Failed to launch external program 'git push'.")
+            error("Failed to launch external program 'git push'.")
             git_remote_free(rRemote);
             git_repository_free(repo);
             return EXIT_FAILURE;
@@ -359,8 +359,8 @@ static int setup__admin_repo(char *pubkey)
         }
         else if (pID < 0)            // failed to fork
         {
-            PRINT_ERROR("Failed to launch external program 'rm'.")
-            PRINT_ERROR("Please remove the .gitorium-admin directory manually.")
+            error("Failed to launch external program 'rm'.")
+            error("Please remove the .gitorium-admin directory manually.")
             git_remote_free(rRemote);
             git_repository_free(repo);
             return EXIT_FAILURE;
@@ -374,7 +374,7 @@ static int setup__admin_repo(char *pubkey)
     }
     else
     {
-        PRINTF_ERROR("The public key file '%s' doesn't exist.", pubkey)
+        errorf("The public key file '%s' doesn't exist.", pubkey)
         return EXIT_FAILURE;
     }
 
@@ -398,7 +398,7 @@ int cmd_setup(int argc, char **argv)
         return 0;
     }
     else
-        PRINT_ERROR("Could not initialize the admin repository.");
+        error("Could not initialize the admin repository.");
 
     return EXIT_FAILURE;
 }

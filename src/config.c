@@ -23,11 +23,11 @@ void gitorium__config_init(void)
 int gitorium__repo_config_load(config_t *cfg)
 {
     git_repository *bRepo;
-    git_reference *bHead, *bRealHead;
     git_commit *hCommit;
     git_tree *hTree;
     git_tree_entry *conf;
     git_blob *blob;
+    git_oid oid;
 
     char *bFullpath, *rPath;
 
@@ -45,31 +45,19 @@ int gitorium__repo_config_load(config_t *cfg)
 
     free(bFullpath);
 
-    if (git_repository_head(&bHead, bRepo))
+    if (git_reference_name_to_oid(&oid, bRepo, "refs/heads/master"))
     {
-        error("Could not load the HEAD.")
+        error("Could not resolve the master.")
         git_repository_free(bRepo);
         return EXIT_FAILURE;
     }
 
-    if (git_reference_resolve(&bRealHead, bHead))
-    {
-        error("Could not resolve the HEAD.")
-        git_reference_free(bHead);
-        git_repository_free(bRepo);
-        return EXIT_FAILURE;
-    }
-
-    git_reference_free(bHead);
-
-    if (git_commit_lookup(&hCommit, bRepo, git_reference_oid(bRealHead)))
+    if (git_commit_lookup(&hCommit, bRepo, &oid))
     {
         error("Could not load the commit.")
         git_repository_free(bRepo);
         return EXIT_FAILURE;
     }
-
-    git_reference_free(bRealHead);
 
     if (git_commit_tree(&hTree, hCommit))
     {

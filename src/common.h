@@ -4,8 +4,13 @@
 #define _GNU_SOURCE
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
+
+#ifdef _USE_FCGI_STDIO
+#include <fcgi_stdio.h>
+#else // _USE_FCGI_STDIO
+#include <stdio.h>
+#endif // _USE_FCGI_STDIO
 
 #include "config.h"
 #include "specific.h"
@@ -19,8 +24,6 @@
 #define debugf(format, ...)    errorf("debug: "format, __VA_ARGS__)
 #define fatal(string)          error("fatal: "string)
 #define fatalf(format, ...)    errorf("fatal: "format, __VA_ARGS__)
-
-#define ADMIN_REPO "gitorium-admin.git"
 
 #endif // COMMON_H_INCLUDED
 

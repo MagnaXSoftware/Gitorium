@@ -159,6 +159,33 @@ static int run_non_interactive(const char *user, char *orig)
     return EXIT_FAILURE;
 }
 
+static struct shell_commands
+{
+    const char *cmd;
+    int (*fn)(char *, char **);
+    int (*help_fn)(char *, char **);
+} commands[] =
+{
+    {"list",   cmd_int_list,  cmd_int_list_help},
+    {NULL, NULL, NULL}
+};
+
+static int (*is_command_valid(char *argv[]))(char *, char **)
+{
+    for (unsigned int i = 0; i < ARRAY_SIZE(commands); i++)
+    {
+        if (!strcmp(argv[0], "help"))
+        {
+            if(!strcmp(commands[i].cmd, argv[1]))
+                return commands[i].help_fn;
+        }
+
+        if (!strcmp(commands[i].cmd, argv[0]))
+            return commands[i].fn;
+    }
+    return NULL;
+}
+
 static int run_interactive(char *user)
 {
     int done = 0;
@@ -166,6 +193,7 @@ static int run_interactive(char *user)
     do
     {
         char *line, **args;
+        int (*fn)(char *, char **);
 
         fprintf(stderr, "gitorium (%s)> ", user);
         get_line(&line);
@@ -182,8 +210,8 @@ static int run_interactive(char *user)
             !strcmp(args[0], "logout") || !strcmp(args[0], "bye"))
         {
             done = 1;
-//        } else if (is_remote_command_valid(args[0])) {
-//            call_remote_command(user, args);
+        } else if ((fn = is_command_valid(args)) != NULL) {
+            fn(user, args);
         }
         else
             fprintf(stderr, "The command does not exist.\n");

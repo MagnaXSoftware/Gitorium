@@ -28,14 +28,18 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../config.h" />
-		<Unit filename="main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="main.h" />
 		<Unit filename="../perms.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../perms.h" />
+		<Unit filename="cmd_int_list.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cmd_int_list.h" />
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="main.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

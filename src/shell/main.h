@@ -6,6 +6,8 @@
 #include "../common.h"
 #include "perms.h"
 
+#include "cmd_int_list.h"
+
 #include <sys/wait.h>
 #include <unistd.h>
 

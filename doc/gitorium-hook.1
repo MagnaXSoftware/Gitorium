@@ -1,0 +1,24 @@
+.TH GITORIUM-HOOK 1 "January 6, 2013" "Gitorium" "Gitorium Manual"
+.SH NAME
+gitorium-hook \- Gitorim hooks
+.SH SYNOPSIS
+.sp
+\fBgitorium-hook
+.sp
+.SH DESCRIPTION
+.sp
+\fBgitorium-hook\fR is the gitorium interface to the git repository hooks.
+This program is run on the repositories on pre-receive, update, 
+post-update and post-receive.
+.sp
+The main purpose of this script is to enable custom per-repository git
+hooks to be run. It loads the administrative repository to get the 
+current list of custom hook for its current call mode and runs them in
+order. Custom hooks can prevent a push in pre-receive mode by returning 
+a nonzero value, or prevent a particuliar update by returning a nonzero
+value in update mode. Return values in post-* mode does not affect the 
+outcome of the script.
+.sp
+.SH "SEE ALSO"
+.BR gitorium-hook-admin (1),
+.BR githooks (5)

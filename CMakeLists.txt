@@ -5,11 +5,12 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 FIND_PACKAGE(git2 REQUIRED)
 FIND_PACKAGE(libconfig REQUIRED)
-INCLUDE_DIRECTORIES(${GIT2_INCLUDE_DIRS} ${LIBCONFIG_INCLUDE_DIRS})
+FIND_PACKAGE(libfcgi REQUIRED)
+INCLUDE_DIRECTORIES(${GIT2_INCLUDE_DIRS} ${LIBCONFIG_INCLUDE_DIRS} ${LIBGFCGI_INCLUDE_DIRS})
 
 # Compilation flags
-SET(CMAKE_C_FLAGS "-O2 -g -Wall -Wextra -Wno-missing-field-initializers -Wstrict-aliasing=2 -Wstrict-prototypes -Wmissing-prototypes ${CMAKE_C_FLAGS} -std=c99")
-SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+SET(CMAKE_C_FLAGS "-std=c99 -O2 -g -Wall -Wextra -Wno-missing-field-initializers -Wstrict-aliasing=2 -Wstrict-prototypes -Wmissing-prototypes ${CMAKE_C_FLAGS}")
+SET(CMAKE_C_FLAGS_DEBUG "-O0 -g -std=c99")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
 # Build in build directory
@@ -32,10 +33,10 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/src/specific.h.cmake ${CMAKE_SOURCE_DIR}/src/
 INSTALL(FILES data/config.cfg DESTINATION /etc/gitorium)
 
 # Targets
-INCLUDE_DIRECTORIES(src src/bin src/shell src/hook-admin src/hook-update src/hook-post-update)
+INCLUDE_DIRECTORIES(src src/bin src/shell src/cgi src/hook-admin src/hook)
 
 ADD_SUBDIRECTORY(src/bin)
 ADD_SUBDIRECTORY(src/shell)
+ADD_SUBDIRECTORY(src/cgi)
+ADD_SUBDIRECTORY(src/hook)
 ADD_SUBDIRECTORY(src/hook-admin)
-ADD_SUBDIRECTORY(src/hook-update)
-ADD_SUBDIRECTORY(src/hook-post-update)

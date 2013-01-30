@@ -3,8 +3,8 @@
 	<Workspace title="Gitorium">
 		<Project filename="src/bin/bin.cbp" />
 		<Project filename="src/shell/shell.cbp" />
+		<Project filename="src/cgi/cgi.cbp" />
+		<Project filename="src/hook/hook.cbp" />
 		<Project filename="src/hook-admin/hook-admin.cbp" />
-		<Project filename="src/hook-update/hook-update.cbp" />
-		<Project filename="src/hook-post-update/hook-post-update.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     // We receive arguments from git as such: name old_oid new_oid
     if (argc != 3)
     {
-        error("We didn't start as an update hook!")
+        error("We didn't start as an update hook!");
     }
     else
     {

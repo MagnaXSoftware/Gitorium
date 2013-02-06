@@ -56,7 +56,7 @@ static int config__get_key(const char *key)
 
     if ((setting = config_lookup(&aCfg, key)) == NULL)
     {
-        error("No configuration found under the specified key")
+        error("No configuration found under the specified key");
         return EXIT_FAILURE;
     }
 
@@ -93,7 +93,7 @@ static int config__get_key(const char *key)
         case CONFIG_TYPE_LIST:
         case CONFIG_TYPE_GROUP:
         default:
-            error("I cannot display configuration keys of this type.")
+            error("I cannot display configuration keys of this type.");
             return EXIT_FAILURE;
     }
 
@@ -140,7 +140,7 @@ static int config__set_key(const char *key, char *value)
             result = (CONFIG_TRUE == config_setting_set_string(setting, (const char *) value));
     		break;
     	default:
-            error("I don't know what value type you added.")
+            error("I don't know what value type you added.");
     		return EXIT_FAILURE;
     }
 

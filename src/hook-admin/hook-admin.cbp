@@ -31,10 +31,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.h" />
-		<Unit filename="repo.c">
+		<Unit filename="../repo.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="repo.h" />
+		<Unit filename="../repo.h" />
 		<Unit filename="ssh.c">
 			<Option compilerVar="CC" />
 		</Unit>

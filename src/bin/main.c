@@ -66,7 +66,7 @@ static int handle_command(int argc, char **argv)
             return run_cmd(p->fn, argc, argv);
     }
 
-    errorf("The command '%s' does not exist.", cmd)
+    errorf("The command '%s' does not exist.", cmd);
     main_help(argc, argv);
 
     return EXIT_FAILURE;

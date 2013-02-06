@@ -9,7 +9,7 @@ static int ssh__reset(void)
 
     if ((file = fopen(path, "w")) == NULL)
     {
-        error("Could not reset authorized keys.")
+        error("Could not reset authorized keys.");
         return EXIT_FAILURE;
     }
 
@@ -33,13 +33,13 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 
     if (git_blob_lookup(&blob, payload, git_tree_entry_id((const git_tree_entry*) entry)))
     {
-        error("Could not load the key.")
+        error("Could not load the key.");
         return 0;
     }
 
     if ((auth = fopen(path, "a")) == NULL)
     {
-        error("Could not open authorized keys file.")
+        error("Could not open authorized keys file.");
         return 0;
     }
 
@@ -54,9 +54,9 @@ static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
 int ssh_setup(void)
 {
     git_repository *bRepo;
-    git_reference *bHead, *bRealHead;
     git_commit *hCommit;
     git_tree *hTree, *kTree;
+    git_oid oid;
 
     char *bFullpath, *rPath;
 
@@ -67,42 +67,30 @@ int ssh_setup(void)
 
     if (git_repository_open(&bRepo, bFullpath))
     {
-        error("Could not open the admin repository.")
+        error("Could not open the admin repository.");
         free(bFullpath);
         return EXIT_FAILURE;
     }
 
     free(bFullpath);
 
-    if (git_repository_head(&bHead, bRepo))
+    if (git_reference_name_to_oid(&oid, bRepo, "refs/heads/master"))
     {
-        error("Could not load the HEAD.")
+        error("Could not resolve the master.");
         git_repository_free(bRepo);
         return EXIT_FAILURE;
     }
 
-    if (git_reference_resolve(&bRealHead, bHead))
+    if (git_commit_lookup(&hCommit, bRepo, &oid))
     {
-        error("Could not resolve the HEAD.")
-        git_reference_free(bHead);
+        error("Could not load the commit.");
         git_repository_free(bRepo);
         return EXIT_FAILURE;
     }
-
-    git_reference_free(bHead);
-
-    if (git_commit_lookup(&hCommit, bRepo, git_reference_oid(bRealHead)))
-    {
-        error("Could not load the commit.")
-        git_repository_free(bRepo);
-        return EXIT_FAILURE;
-    }
-
-    git_reference_free(bRealHead);
 
     if (git_commit_tree(&hTree, hCommit))
     {
-        error("Could not load the main tree.")
+        error("Could not load the main tree.");
         git_commit_free(hCommit);
         git_repository_free(bRepo);
         return EXIT_FAILURE;
@@ -110,7 +98,7 @@ int ssh_setup(void)
 
     if (git_tree_get_subtree(&kTree, hTree, "keys"))
     {
-        error("Could not find the \"keys\" subtree in the main tree.")
+        error("Could not find the \"keys\" subtree in the main tree.");
         git_tree_free(hTree);
         git_commit_free(hCommit);
         git_repository_free(bRepo);

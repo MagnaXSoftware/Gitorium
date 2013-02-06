@@ -3,6 +3,6 @@
 
 #include "../common.h"
 #include "ssh.h"
-#include "repo.h"
+#include "../repo.h"
 
 #endif // MAIN_H_INCLUDED

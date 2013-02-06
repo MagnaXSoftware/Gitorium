@@ -3,6 +3,8 @@ test
 Debug
 build
 build.log
+src/specific.h
 *.depend
 *.layout
-src/specific.h
+*.cbp
+*.workspace

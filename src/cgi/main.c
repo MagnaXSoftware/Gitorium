@@ -50,17 +50,13 @@ static void http_end_headers(void)
 
 static void get_info_refs(const char *loc)
 {
-    char *str;
-
     http_status(200, "OK");
     http_header("Content-Type", "application/x-git-upload-pack-advertisement");
     http_cache_none();
     http_end_headers();
 
-    git_sformat(&str, "# service=git-upload-pack\n");
-    printf(str);
-    free(str);
-    printf("0000");
+    gitio_write(fileno(stdout), "# service=git-upload-pack\n");
+    gitio_flush();
 
     pid_t pID = fork();
     if (pID == 0)                // child
@@ -120,7 +116,7 @@ int main(void)
             http_status(500, "Internal Server Error");
             http_end_headers();
             fatal("No REQUEST_METHOD or DOCUMENT_URI was given.\n"
-                  "Check your server config.")
+                  "Check your server config.");
             continue;
         }
         if (!strcmp(method, "HEAD"))
@@ -144,6 +140,7 @@ int main(void)
             if (regexec(&r, doc_uri, 1, out, 0))
                 continue;
 
+            //use string functions here instead
             char *rel = malloc(sizeof(char) * (strlen(doc_uri) - (out[0].rm_eo - out[0].rm_so) + 1));
             memcpy(rel, doc_uri, (sizeof(char) * (strlen(doc_uri) - (out[0].rm_eo - out[0].rm_so))));
             regfree(&r);
@@ -161,7 +158,7 @@ int main(void)
             {
                 http_status(404, "Not Found");
                 http_end_headers();
-                fatal("The specified repository does not exist.")
+                fatal("The specified repository does not exist.");
                 break;
             }
 

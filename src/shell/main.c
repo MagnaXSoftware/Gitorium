@@ -72,87 +72,126 @@ static int run_non_interactive(const char *user, char *orig)
 
     split_args(&args, orig);
 
-    char *mName = malloc(sizeof(char) * (strlen(args[1]) + 1)), *imName = mName;
-    strcpy(mName, args[1]);
-
-    config_t cfg;
-    config_setting_t *setting;
+    char *repoName = malloc(sizeof(char) * (strlen(args[1]) + 1)), *irepoName = repoName;
+    strcpy(repoName, args[1]);
 
     config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
 
-    config_init(&cfg);
-    if (gitorium__repo_config_load(&cfg))
-    {
-        config_destroy(&cfg);
-        return EXIT_FAILURE;
-    }
+    if ('\'' == repoName[0])
+        repoName++;
 
-    if ((setting = config_lookup(&cfg, "repositories")) == NULL)
-    {
-        fatal("could not load the repository list")
-        config_destroy(&cfg);
-        return EXIT_FAILURE;
-    }
+    if ('\'' == repoName[strlen(repoName)-1])
+        repoName[strlen(repoName)-1] = 0;
 
-    if ('\'' == mName[0])
-        mName++;
+    if ('/' == repoName[strlen(repoName)-1])
+        repoName[strlen(repoName)-1] = 0;
 
-    if ('\'' == mName[strlen(mName)-1])
-        mName[strlen(mName)-1] = 0;
-
-    if ('/' == mName[strlen(mName)-1])
-        mName[strlen(mName)-1] = 0;
-
-    if (!strcmp(".git", &mName[strlen(mName)-4]))
-        mName[strlen(mName)-4] = 0;
+    if (!strcmp(".git", &repoName[strlen(repoName)-4]))
+        repoName[strlen(repoName)-4] = 0;
 
     for (struct git_exec *cmd = cmd_list; cmd->name ; cmd++)
     {
         if (strcmp(cmd->name, args[0]))
             continue;
 
-        int count = config_setting_length(setting);
+        char *rFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(repoName) + 4 + 1));
+        strcat(strcat(strcpy(rFullpath, rPath), repoName), ".git");
 
-        for (int i = 0; i < count; i++)
+        if ('~' == repoName[0])
         {
-            config_setting_t *repo = config_setting_get_elem(setting, i);
-            char *name;
-
-            config_setting_lookup_string(repo, "name", (const char **) &name);
-
-            if (strcmp(name, mName))
-                continue;
-
-            if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
+            if (strprecmp(&repoName[1], user))
             {
-                config_destroy(&cfg);
-                free(imName);
-                fatal("insufficient permissions")
+                fatal("insufficient permissions");
+                free(rFullpath);
+                free(irepoName);
                 return EXIT_FAILURE;
             }
-        }
 
-        pid_t pID = fork();
-        if (pID == 0)                // child
-        {
-            char *rFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(mName) + 4 + 1));
-            strcat(strcat(strcpy(rFullpath, rPath), mName), ".git");
-            setenv("GITORIUM_USER", user, 1); // THat way we know who is accessing the shell
-            execlp(cmd->name, cmd->name, rFullpath, (char *) NULL);
-            _exit(1);
+            struct stat rStat;
+
+            if (stat(rFullpath, &rStat))
+            {
+                char *rPartpath = malloc(sizeof(char) * (strlen(rPath) + 1 + strlen(user) + 1));
+                strcat(strcat(strcpy(rPartpath, rPath), "~"), user);
+
+                if (stat(rPartpath, &rStat))
+                    mkdir(rPartpath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+                free(rPartpath);
+
+                repo_create(repoName);
+            }
         }
-        else if (pID < 0)            // failed to fork
+        else
         {
-            fatalf("failed to launch %s", cmd->name)
-            free(imName);
+            config_t cfg;
+            config_setting_t *setting;
+
+            config_init(&cfg);
+            if (gitorium__repo_config_load(&cfg))
+            {
+                config_destroy(&cfg);
+                free(rFullpath);
+                free(irepoName);
+                return EXIT_FAILURE;
+            }
+
+            if ((setting = config_lookup(&cfg, "repositories")) == NULL)
+            {
+                fatal("could not load the repository list");
+                config_destroy(&cfg);
+                free(rFullpath);
+                free(irepoName);
+                return EXIT_FAILURE;
+            }
+
+            int count = config_setting_length(setting);
+
+            for (int i = 0; i < count; i++)
+            {
+                config_setting_t *repo = config_setting_get_elem(setting, i);
+                char *name;
+
+                config_setting_lookup_string(repo, "name", (const char **) &name);
+
+                if (strcmp(name, repoName))
+                    continue;
+
+                if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
+                {
+                    fatal("insufficient permissions");
+                    config_destroy(&cfg);
+                    free(rFullpath);
+                    free(irepoName);
+                    return EXIT_FAILURE;
+                }
+                else
+                    break; //we have permission, we don't need to see the rest of the repos.
+            }
+
             config_destroy(&cfg);
-            return EXIT_FAILURE;
         }
 
-        config_destroy(&cfg);
+        free(irepoName);
 
-        waitpid(pID, NULL, 0);
-        free(imName);
+            pid_t pID = fork();
+            if (pID == 0)                // child
+            {
+                setenv("GITORIUM_USER", user, 1); // THat way we know who is accessing the shell
+                execlp(cmd->name, cmd->name, rFullpath, (char *) NULL);
+                _exit(1);
+            }
+            else if (pID < 0)            // failed to fork
+            {
+                fatalf("failed to launch %s", cmd->name);
+                free(rFullpath);
+                return EXIT_FAILURE;
+            }
+
+            waitpid(pID, NULL, 0);
+
+
+        free(rFullpath);
         return 0;
     }
 
@@ -208,13 +247,11 @@ static int run_interactive(char *user)
 
         if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit") ||
             !strcmp(args[0], "logout") || !strcmp(args[0], "bye"))
-        {
             done = 1;
-        } else if ((fn = is_command_valid(args)) != NULL) {
+        else if ((fn = is_command_valid(args)) != NULL)
             fn(user, args);
-        }
         else
-            fprintf(stderr, "The command does not exist.\n");
+            error("The command does not exist.");
 
         free(line);
         free(args);
@@ -235,7 +272,8 @@ int main(int argc, char **argv)
     if (argc < 1)
     {
         // Someone tried to call us directly
-        fprintf(stderr, "You must call this from a shell.\n");
+        error("You cannot call the shell directly.");
+        error("Please use 'gitorium' instead.");
     }
     else
     {

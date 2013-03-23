@@ -1,0 +1,10 @@
+obj
+test
+Debug
+build
+build.log
+src/specific.h
+*.depend
+*.layout
+*.cbp
+*.workspace

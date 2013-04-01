@@ -45,7 +45,7 @@ int gitorium_execlp(void (*cb)(void *), void *payload, const char *file, const c
 
 int rrmdir(const char *dir)
 {
-	return gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", dir, (char *) NULL);
+	return gitorium_execlp(NULL, NULL, "rm", "-rf", dir, (char *) NULL);
 }
 
 int strprecmp(const char *str, const char *prefix)

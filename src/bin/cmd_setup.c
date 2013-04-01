@@ -287,7 +287,7 @@ static int setup__admin_repo(char *pubkey, int force)
 
 		if (!stat(rFullpath, &rStat))
 		{
-			if (gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", rFullpath, (char *) NULL))
+			if (gitorium_execlp(NULL, NULL, "rm", "-rf", rFullpath, (char *) NULL))
 			{
 				error("Failed to launch external program 'rm'.");
 				error("Please remove the admin directory manually.");
@@ -363,7 +363,7 @@ static int setup__admin_repo(char *pubkey, int force)
 
 		git_remote_disconnect(rRemote);
 		#else
-		if (gitorium_execlp(&exec_setup_push, (void *) ".gitorium-admin", "git", "git", "push", "origin", "master", (char *) NULL))
+		if (gitorium_execlp(&exec_setup_push, (void *) ".gitorium-admin", "git", "push", "origin", "master", (char *) NULL))
 		{
 			error("Failed to launch external program 'git push'.");
 			git_remote_free(rRemote);
@@ -374,7 +374,7 @@ static int setup__admin_repo(char *pubkey, int force)
 
 		git_remote_free(rRemote);
 
-		if (gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", ".gitorium-admin", (char *) NULL))
+		if (gitorium_execlp(NULL, NULL, "rm", "-rf", ".gitorium-admin", (char *) NULL))
 		{
 			error("Failed to launch external program 'rm'.");
 			error("Please remove the .gitorium-admin directory manually.");

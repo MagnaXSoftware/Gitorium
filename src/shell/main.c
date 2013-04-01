@@ -154,7 +154,7 @@ static int run_non_interactive(const char *user, char *orig)
 
 		free(irepoName);
 
-		if (gitorium_execlp(&exec__setup_interactive, (void *) user, cmd->name, cmd->name, rFullpath, (char *) NULL))
+		if (gitorium_execlp(&exec__setup_interactive, (void *) user, cmd->name, rFullpath, (char *) NULL))
 		{
 			fatalf("failed to launch %s", cmd->name);
 			free(rFullpath);

@@ -38,6 +38,7 @@ static int opt_version(void)
 static int handle_command(int argc, char **argv)
 {
 	if (0 == argc ||
+		(1 == argc && !strcmp("help", argv[0])) ||
 		!strcmp("--help", argv[0]) ||
 		!strcmp("-h", argv[0]))
 		return main_help(argc, argv);
@@ -45,6 +46,12 @@ static int handle_command(int argc, char **argv)
 	if (!strcmp("--version", argv[0]) ||
 		!strcmp("-v", argv[0]))
 		return opt_version();
+
+	if (!strcmp("help", argv[0]))
+	{
+		argv[0] = argv[1];
+		argv[1] = "help";
+	}
 
 	for (struct bin_cmd *p = bin_cmds; p->cmd; p++)
 	{

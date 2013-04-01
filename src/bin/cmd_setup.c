@@ -426,8 +426,8 @@ int cmd_setup_help(int argc, char **argv)
 		"\n"
 		"Sets up gitorium for the current user.\n"
 		"\n"
-		"<pubkey> is the path to the administrator's public key. It should be "
-		"named after the user (user admin has a key named admin.pub). That "
-		"user will be set up as the initial administrator.");
+		"<pubkey> is the path to the administrator's public key. It should be\n"
+		"\tnamed after the user (user admin has a key named admin.pub). That\n"
+		"\tuser will be set up as the initial administrator.");
 	return 0;
 }

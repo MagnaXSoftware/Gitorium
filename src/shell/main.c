@@ -29,7 +29,7 @@ static int get_line(char **linep)
 		*line++ = c;
 	}
 
-	*line = '\0';
+	*line = 0;
 	return 0;
 }
 

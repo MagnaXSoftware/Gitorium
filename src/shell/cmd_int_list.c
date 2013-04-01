@@ -23,12 +23,49 @@ static int int_list_repos(void)
 
 	for (int i = 0; i < config_setting_length(setting); i++)
 	{
-		config_setting_t *repo = config_setting_get_elem(setting, i);
+		config_setting_t *elem = config_setting_get_elem(setting, i);
 		char *name;
 
-		config_setting_lookup_string(repo, "name", (const char **) &name);
+		config_setting_lookup_string(elem, "name", (const char **) &name);
 
 		printf("\t%s\n", name);
+	}
+
+	return 0;
+}
+
+static int int_list_groups(void)
+{
+	config_t cfg;
+	config_setting_t *setting;
+
+	config_init(&cfg);
+	if (gitorium__repo_config_load(&cfg))
+	{
+		config_destroy(&cfg);
+		return GITORIUM_ERROR;
+	}
+
+	if (NULL == (setting = config_lookup(&cfg, "groups")))
+	{
+		fatal("could not load the group list");
+		config_destroy(&cfg);
+		return GITORIUM_ERROR;
+	}
+
+	puts("Here are the known groups.");
+
+	for (int i = 0; i < config_setting_length(setting); i++)
+	{
+		config_setting_t *elem = config_setting_get_elem(setting, i);
+
+		printf("\t%s\n\t", config_setting_name(elem));
+
+		for (int j = 0; j < config_setting_length(elem); j++)
+		{
+			printf("%s ", config_setting_get_string_elem(elem, j));
+		}
+		puts("");
 	}
 
 	return 0;
@@ -48,7 +85,7 @@ int cmd_int_list(char *user, char *args[])
 		case 'r':
 			return int_list_repos();
 		case 'g':
-			return GITORIUM_ERROR;
+			return int_list_groups();
 		case 'u':
 			return GITORIUM_ERROR;
 		default:

@@ -192,7 +192,7 @@ int cmd_config_help(int argc, char **argv)
          "\t\ti for int\n"
          "\t\tl for long long (int64)\n"
          "\t\tf for double (float)\n"
-         "\t\tb for boolean (only valid string representations are true and false)\n"
+         "\t\tb for boolean (string representations are 'true' and 'false')\n"
          "\t\ts for string\n");
     return 0;
 }

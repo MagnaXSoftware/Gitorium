@@ -2,6 +2,7 @@
 
 int cmd_int_fsck(char *user, char **args)
 {
+	error("THIS COMMAND HAS NOT YET BEEN IMPLEMENTED.");
 	return -1;
 }
 

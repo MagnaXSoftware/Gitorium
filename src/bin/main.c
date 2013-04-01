@@ -75,7 +75,6 @@ static int handle_command(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-// We remove the name of the executable from the list
 	argv++;
 	argc--;
 

@@ -31,7 +31,7 @@ int repo_create(char *name)
 				goto cleanup_mem;
 
 			strcat(strcpy(puPath, nFullpath), "/hooks/post-update");
-			symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-post-update", puPath);
+			symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook", puPath);
 			free(puPath);
 
 			char *uPath = malloc(sizeof(char) * (strlen(nFullpath) + strlen("/hooks/update") + 1));
@@ -39,7 +39,7 @@ int repo_create(char *name)
 				goto cleanup_mem;
 
 			strcat(strcpy(uPath, nFullpath), "/hooks/update");
-			symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-update", uPath);
+			symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook", uPath);
 			free(uPath);
 		}
 

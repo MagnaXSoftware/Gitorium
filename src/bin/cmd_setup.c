@@ -371,7 +371,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			return GITORIUM_ERROR;
 		}
 		#endif
-		
+
 		git_remote_free(rRemote);
 
 		if (gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", ".gitorium-admin", (char *) NULL))

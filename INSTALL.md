@@ -35,3 +35,8 @@ Installing
 From within the `build` directory, issue the following command (as root, if need be):
 
     make install
+
+Binaries & Packages
+-------------------
+
+A Ubuntu deb is maintained by xavier-l [on launchpad](https://launchpad.net/~xav0989/+archive/gitorium).

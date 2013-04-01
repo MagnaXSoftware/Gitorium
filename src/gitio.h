@@ -3,11 +3,6 @@
 
 #include "../common.h"
 
-#include <stdarg.h>
-#include <unistd.h>
-
-int strprecmp(const char *str, const char *prefix);
-
 void gitio_flush(void);
 
 unsigned int gitio_sformat(char **out, const char *format, ...);

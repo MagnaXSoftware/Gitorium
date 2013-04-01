@@ -6,6 +6,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <git2.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <stdarg.h>
 
 #ifdef _USE_FCGI_STDIO
     #include <fcgi_stdio.h>
@@ -15,8 +19,10 @@
 
 #include "config.h"
 #include "specific.h"
+#include "error.h"
 
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+#define sizeofa(x) (sizeof(x)/sizeof(x[0]))
+#define ARRAY_SIZE sizeofa
 
 #define error(string)          errorf("%s", string)
 #define errorf(format, ...)    fprintf(stderr, format"\n", __VA_ARGS__)
@@ -31,6 +37,11 @@
 #define debugf(format, ...)    errorf("debug: "format, __VA_ARGS__)
 #define fatal(string)          error("fatal: "string)
 #define fatalf(format, ...)    errorf("fatal: "format, __VA_ARGS__)
+
+int gitorium_execvp(const char **argv);
+int gitorium_execlp(const char *file, const char *arg, ...);
+int rrmdir(const char *dir);
+int strprecmp(const char *str, const char *prefix);
 
 #endif // COMMON_H_INCLUDED
 

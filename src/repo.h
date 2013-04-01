@@ -7,5 +7,6 @@
 #include <unistd.h>
 
 int repo_create(char *name);
+char *repo_massage(char *orig);
 
 #endif // REPO_H_INCLUDED

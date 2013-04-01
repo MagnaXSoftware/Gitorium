@@ -4,7 +4,6 @@
 #include "common.h"
 
 #include <libconfig.h>
-#include <sys/stat.h>
 
 #define RC_FILE "/etc/gitorium/config.cfg"
 

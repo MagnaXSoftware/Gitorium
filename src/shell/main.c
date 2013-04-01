@@ -32,7 +32,6 @@ static void exec__setup_interactive(void *payload)
 	setenv("GITORIUM_USER", (char *)payload, 1);
 }
 
-
 static struct non_interactive_cmd
 {
 	const char *name;
@@ -200,29 +199,31 @@ static int get_line(char **linep)
 	return 0;
 }
 
-static int interactive_help(char *user, char *argv[])
-{
-	return 0;
-}
-
 static struct interactive_cmd
 {
 	const char *name;
 	int (*fn)(char *, char **);
 	int (*help_fn)(char *, char **);
+	const char *desc;
 } int_cmds[] =
 {
-	{"list",   &cmd_int_list,   &cmd_int_list_help},
-	{"fsck",   &cmd_int_fsck,   &cmd_int_fsck_help},
+	{"list",   &cmd_int_list,   &cmd_int_list_help,     "List known objects."},
+	{"fsck",   &cmd_int_fsck,   &cmd_int_fsck_help,     "Run git fsck on repositories."},
 	{NULL}
 };
 
+static int interactive_help()
+{
+	puts("Here are the available commands for Gitorium Shell:");
+	for (struct interactive_cmd *cmd = int_cmds; cmd->name ; cmd++)
+	{
+		printf("\t%s: %s\n", cmd->name, cmd->desc);
+	}
+	return 0;
+}
+
 static int (*is_command_valid(char *argv[]))(char *, char **)
 {
-	if (NULL == argv[0] ||
-		(!strcmp("help", argv[0]) && NULL == argv[1]))
-		return interactive_help;
-
 	for (struct interactive_cmd *cmd = int_cmds; cmd->name ; cmd++)
 	{
 		if (!strcmp(argv[0], "help"))
@@ -275,8 +276,11 @@ static int run_interactive(char *user)
 		if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit") ||
 			!strcmp(args[0], "logout") || !strcmp(args[0], "bye"))
 			done = 1;
+		else if (NULL == args[0] ||
+			(!strcmp("help", args[0]) && NULL == args[1]))
+			interactive_help();
 		else if ((fn = is_command_valid(args)) != NULL)
-			fn(user, args);
+			(*fn)(user, args);
 		else
 			error("The command does not exist.");
 

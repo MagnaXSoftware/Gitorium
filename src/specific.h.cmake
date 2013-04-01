@@ -5,4 +5,6 @@
 
 #define ADMIN_REPO "gitorium-admin.git"
 
+#define GITORIUM_VERSION "1.2-dev"
+
 #endif // SPECIFIC_H_INCLUDED

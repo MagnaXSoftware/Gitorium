@@ -207,17 +207,17 @@ static struct interactive_cmd
 	const char *desc;
 } int_cmds[] =
 {
-	{"list",   &cmd_int_list,   &cmd_int_list_help,     "List known objects."},
-	{"fsck",   &cmd_int_fsck,   &cmd_int_fsck_help,     "Run git fsck on repositories."},
+	{"list",   &cmd_int_list,   &cmd_int_list_help,     "list known objects"},
+	{"fsck",   &cmd_int_fsck,   &cmd_int_fsck_help,     "run git fsck on repositories"},
 	{NULL}
 };
 
-static int interactive_help()
+static int interactive_help(void)
 {
-	puts("Here are the available commands for Gitorium Shell:");
+	puts("Here are the available commands for Gitorium Shell:\n");
 	for (struct interactive_cmd *cmd = int_cmds; cmd->name ; cmd++)
 	{
-		printf("\t%s: %s\n", cmd->name, cmd->desc);
+		printf("\t%s - %s\n", cmd->name, cmd->desc);
 	}
 	return 0;
 }

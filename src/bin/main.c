@@ -8,8 +8,8 @@ static struct bin_cmd
 	const char *desc;
 } bin_cmds[] =
 {
-	{"setup",   &cmd_setup,  &cmd_setup_help,       "Initialize (or re-initialize) Gitorium."},
-	{"config",  &cmd_config, &cmd_config_help,      "Retrieve or set Gitorium configuration."},
+	{"setup",   &cmd_setup,  &cmd_setup_help,       "initialize (or re-initialize) Gitorium"},
+	{"config",  &cmd_config, &cmd_config_help,      "retrieve or set Gitorium configuration"},
 	{NULL}
 };
 
@@ -17,12 +17,10 @@ static int main_help(int argc, char **argv)
 {
 	puts("gitorium <command> [<args>]\n"
 		"\n"
-		"For more information on a particular command, please run gitorium help <command>\n"
-		"\n"
-		"Available commands:");
+		"Available commands:\n");
 	for (struct bin_cmd *p = bin_cmds; p->cmd; p++)
 	{
-		printf("\t%s: %s\n", p->cmd, p->desc);
+		printf("\t%s - %s\n", p->cmd, p->desc);
 	}
 	return 0;
 }

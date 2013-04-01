@@ -116,7 +116,7 @@ int ssh_setup(void)
 		git_tree_free(hTree);
 		git_commit_free(hCommit);
 		git_repository_free(bRepo);
-		return EXIT_FAILURE;
+		return GITORIUM_ERROR;
 	}
 
 	git_tree_walk(kTree, ssh__add, GIT_TREEWALK_POST, bRepo);

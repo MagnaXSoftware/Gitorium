@@ -8,8 +8,8 @@ static struct bin_cmd
 	const char *desc;
 } bin_cmds[] =
 {
-	{"setup",   cmd_setup,  cmd_setup_help,		"Initialize (or re-initialize) Gitorium."},
-	{"config",  cmd_config, cmd_config_help,	"Retrieve or set Gitorium configuration."},
+	{"setup",   &cmd_setup,  &cmd_setup_help,       "Initialize (or re-initialize) Gitorium."},
+	{"config",  &cmd_config, &cmd_config_help,      "Retrieve or set Gitorium configuration."},
 	{NULL}
 };
 

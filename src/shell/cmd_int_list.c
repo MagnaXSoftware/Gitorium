@@ -59,7 +59,7 @@ static int int_list_groups(void)
 	{
 		config_setting_t *elem = config_setting_get_elem(setting, i);
 
-		printf("\t%s\n\t", config_setting_name(elem));
+		printf("\t%s\n\t\t", config_setting_name(elem));
 
 		for (int j = 0; j < config_setting_length(elem); j++)
 		{
@@ -69,6 +69,12 @@ static int int_list_groups(void)
 	}
 
 	return 0;
+}
+
+static int int_list_users(void)
+{
+	//@todo read the "keys" subtree and print em all!
+	return GITORIUM_ERROR;
 }
 
 int cmd_int_list(char *user, char *args[])

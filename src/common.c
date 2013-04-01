@@ -2,11 +2,13 @@
 
 #define MAX_ARGS 32
 
-int gitorium_execvp(const char **argv)
+int gitorium_execvp(void (*cb)(void *), void *payload, const char **argv)
 {
 	pid_t pID = fork();
 	if (pID == 0)                // child
 	{
+		if (NULL != cb)
+			(*cb)(payload);
 		execvp(argv[0], (char * const *) argv);
 		_exit(1);
 	}
@@ -20,7 +22,7 @@ int gitorium_execvp(const char **argv)
 	return 0;
 }
 
-int gitorium_execlp(const char *file, const char *arg0, ...)
+int gitorium_execlp(void (*cb)(void *), void *payload, const char *file, const char *arg0, ...)
 {
 	va_list param;
 	int argc;
@@ -38,12 +40,12 @@ int gitorium_execlp(const char *file, const char *arg0, ...)
 
 	argv[argc] = NULL; // this seems redundant
 
-	return gitorium_execvp(argv);
+	return gitorium_execvp(cb, payload, argv);
 }
 
 int rrmdir(const char *dir)
 {
-	return gitorium_execlp("rm", "rm", "-rf", dir, (char *) NULL);
+	return gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", dir, (char *) NULL);
 }
 
 int strprecmp(const char *str, const char *prefix)

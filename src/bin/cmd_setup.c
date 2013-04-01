@@ -73,6 +73,11 @@ static void setup__generate_conf(char **fullconf, char *user)
 	}
 }
 
+static void exec_setup_push(void *payload)
+{
+	chdir((char *) payload);
+}
+
 // TODO: split this up
 static int setup__admin_repo(char *pubkey, int force)
 {
@@ -84,10 +89,8 @@ static int setup__admin_repo(char *pubkey, int force)
 	git_tree *rTree;
 
 	FILE *pFile;
-	char *buffer, *rFullpath, *rUrl, *conf,
-	*user = malloc(sizeof(char)*(strlen(pubkey)+1));
+	char *buffer, *rFullpath, *rUrl, *conf, *user;
 	const char *rPath;
-	int size, result;
 	struct stat rStat;
 	pid_t pID;
 
@@ -98,19 +101,22 @@ static int setup__admin_repo(char *pubkey, int force)
 
 	if (!stat(rFullpath, &rStat))
 	{
-// admin repo exists
 		if (!force)
 		{
 			error("Administration repo already exists. Use --force to overwrite it.");
-			return EXIT_FAILURE;
+			free(rFullpath);
+			return GITORIUM_ERROR;
 		}
 	}
 
+	user = malloc(sizeof(char)*(strlen(pubkey)+1));
 	strcpy(user, pubkey);
 	if (user[0] == '*')
 	{
 		error("Users cannot begin with *. Please rename the file.");
-		return EXIT_FAILURE;
+		free(user);
+		free(rFullpath);
+		return GITORIUM_ERROR;
 	}
 	user = strtok(user, ".");
 	setup__generate_conf(&conf, user);
@@ -126,7 +132,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			error("Could initialize a new administration repository.");
 			fclose(pFile);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_treebuilder_create(&rcBuilder, NULL))
@@ -136,12 +142,12 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_repository_free(repo);
 			fclose(pFile);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 // Copying the key
 		fseek(pFile , 0 , SEEK_END);
-		size = ftell(pFile);
+		int size = ftell(pFile);
 		rewind(pFile);
 
 		buffer = malloc(sizeof(char) * size);
@@ -153,11 +159,10 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_repository_free(repo);
 			fclose(pFile);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
-		result = fread(buffer, sizeof(char), size, pFile);
-		if (result != size)
+		if (fread(buffer, sizeof(char), size, pFile) != size)
 		{
 			error("Could not copy the public key.");
 			free(buffer);
@@ -165,7 +170,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_repository_free(repo);
 			fclose(pFile);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		fclose(pFile);
@@ -177,7 +182,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rcBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		free(buffer);
@@ -188,7 +193,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rcBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_treebuilder_write(&iOid, repo, rcBuilder))
@@ -197,7 +202,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rcBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		git_treebuilder_free(rcBuilder);
@@ -208,7 +213,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_treebuilder_insert(NULL, rBuilder, "keys", &iOid, 040000))
@@ -217,7 +222,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_blob_create_frombuffer(&iOid, repo, conf, sizeof(char)*strlen(conf)))
@@ -226,7 +231,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_treebuilder_insert(NULL, rBuilder, "gitorium.conf", &iOid, 0100644))
@@ -235,7 +240,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_treebuilder_free(rBuilder);
 			git_repository_free(repo);
 			free(conf);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		free(conf);
@@ -245,7 +250,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			error("Could not write the tree to index.");
 			git_treebuilder_free(rBuilder);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		git_treebuilder_free(rBuilder);
@@ -255,7 +260,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			error("Could not write the tree to index.");
 			git_tree_free(rTree);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_signature_now(&rAuthor, "Gitorium", "Gitorium@local"))
@@ -263,7 +268,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			error("Could not create a commit author.");
 			git_tree_free(rTree);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		if (git_commit_create(&iOid, repo, "HEAD", rAuthor, rAuthor, NULL, "Initial Configuration", rTree, 0, NULL))
@@ -272,7 +277,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_signature_free(rAuthor);
 			git_tree_free(rTree);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		git_signature_free(rAuthor);
@@ -282,21 +287,15 @@ static int setup__admin_repo(char *pubkey, int force)
 
 		if (!stat(rFullpath, &rStat))
 		{
-			pID = fork();
-			if (pID == 0)                // child
-			{
-				execlp("rm", "rm", "-rf", rFullpath);
-				_exit(1);
-			}
-			else if (pID < 0)            // failed to fork
+			if (gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", rFullpath, (char *) NULL))
 			{
 				error("Failed to launch external program 'rm'.");
+				error("Please remove the admin directory manually.");
+				errorf("%s\n", rFullpath);
 				free(rFullpath);
 				git_repository_free(repo);
-				return EXIT_FAILURE;
+				return GITORIUM_ERROR;
 			}
-
-			waitpid(pID, NULL, 0);
 		}
 
 		if (git_repository_init(&bRepo, rFullpath, 1))
@@ -304,7 +303,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			error("Could not initialize the remote admin repository.");
 			free(rFullpath);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		git_repository_free(bRepo);
@@ -329,7 +328,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_remote_free(rRemote);
 			free(rUrl);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 			free(rUrl);
@@ -341,45 +340,28 @@ static int setup__admin_repo(char *pubkey, int force)
 			git_remote_disconnect(rRemote);
 			git_remote_free(rRemote);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
 		git_remote_disconnect(rRemote);
 		#else
-		pID = fork();
-		if (pID == 0)                // child
-		{
-			chdir(".gitorium-admin");
-			execlp("git", "git", "push", "origin", "master");
-			_exit(1);
-		}
-		else if (pID < 0)            // failed to fork
+		if (gitorium_execlp(&exec_setup_push, (void *) ".gitorium-admin", "git", "git", "push", "origin", "master", (char *) NULL))
 		{
 			error("Failed to launch external program 'git push'.");
 			git_remote_free(rRemote);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
-
-		waitpid(pID, NULL, 0);
 		#endif
 
-		pID = fork();
-		if (pID == 0)                // child
-		{
-			execlp("rm", "rm", "-rf", ".gitorium-admin");
-			_exit(1);
-		}
-		else if (pID < 0)            // failed to fork
+		if (gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", ".gitorium-admin", (char *) NULL))
 		{
 			error("Failed to launch external program 'rm'.");
 			error("Please remove the .gitorium-admin directory manually.");
 			git_remote_free(rRemote);
 			git_repository_free(repo);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
-
-		waitpid(pID, NULL, 0);
 
 		git_remote_free(rRemote);
 		git_repository_free(repo);
@@ -388,7 +370,7 @@ static int setup__admin_repo(char *pubkey, int force)
 	else
 	{
 		errorf("The public key file '%s' doesn't exist.", pubkey);
-		return EXIT_FAILURE;
+		return GITORIUM_ERROR;
 	}
 
 	return 0;
@@ -396,28 +378,27 @@ static int setup__admin_repo(char *pubkey, int force)
 
 int cmd_setup(int argc, char **argv)
 {
-// We remove the name of the executable from the list
 	argv++;
 	argc--;
 
 	if (argc == 0)
 	{
 		cmd_setup_help(argc, argv);
-		return EXIT_FAILURE;
+		return GITORIUM_ERROR;
 	}
 
-	int result;
+	int r = GITORIUM_ERROR;
 
 	if (!strcmp("--force", argv[0]))
 	{
-		result = setup__admin_repo(argv[1], 1);
+		r = setup__admin_repo(argv[1], 1);
 	}
 	else
 	{
-		result = setup__admin_repo(argv[0], 0);
+		r = setup__admin_repo(argv[0], 0);
 	}
 
-	return result;
+	return r;
 }
 
 int cmd_setup_help(int argc, char **argv)

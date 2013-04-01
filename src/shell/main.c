@@ -1,38 +1,5 @@
 #include "main.h"
 
-static int get_line(char **linep)
-{
-	char *line = malloc(LINE_BUFFER_SIZE);
-	int len = LINE_BUFFER_SIZE, c;
-	*linep = line;
-
-	if(line == NULL)
-		return GITORIUM_MEM_ALLOC;
-
-	for(;;)
-	{
-		c = fgetc(stdin);
-		if(c == EOF || c == '\n')
-			break;
-
-		if(--len == 0)
-		{
-			char *linen = realloc(*linep, sizeof *linep + LINE_BUFFER_SIZE);
-			if(linen == NULL)
-				return GITORIUM_MEM_ALLOC;
-
-			len = LINE_BUFFER_SIZE;
-			line = linen + (line - *linep);
-			*linep = linen;
-		}
-
-		*line++ = c;
-	}
-
-	*line = 0;
-	return 0;
-}
-
 static int split_args(char ***args, char *str)
 {
 	char **res = NULL, *p = strtok(str, " ");
@@ -59,6 +26,12 @@ static int split_args(char ***args, char *str)
 
 	return i;
 }
+
+static void exec__setup_interactive(void *payload)
+{
+	setenv("GITORIUM_USER", (char *)payload, 1);
+}
+
 
 static struct non_interactive_cmd
 {
@@ -181,29 +154,55 @@ static int run_non_interactive(const char *user, char *orig)
 
 		free(irepoName);
 
-		// @todo make this use the gitorium_exec* functions
-		pid_t pID = fork();
-		if (pID == 0)                // child
-		{
-			setenv("GITORIUM_USER", user, 1); // To know who is accessing the shell
-			execlp(cmd->name, cmd->name, rFullpath, (char *) NULL);
-			_exit(1);
-		}
-		else if (pID < 0)            // failed to fork
+		if (gitorium_execlp(&exec__setup_interactive, (void *) user, cmd->name, cmd->name, rFullpath, (char *) NULL))
 		{
 			fatalf("failed to launch %s", cmd->name);
 			free(rFullpath);
-			return EXIT_FAILURE;
+			return GITORIUM_ERROR;
 		}
 
-		waitpid(pID, NULL, 0);
-
-
-		free(rFullpath);
 		return 0;
 	}
 
-	return EXIT_FAILURE;
+	return GITORIUM_ERROR;
+}
+
+static int get_line(char **linep)
+{
+	char *line = malloc(LINE_BUFFER_SIZE);
+	int len = LINE_BUFFER_SIZE, c;
+	*linep = line;
+
+	if(line == NULL)
+		return GITORIUM_MEM_ALLOC;
+
+	for(;;)
+	{
+		c = fgetc(stdin);
+		if(c == EOF || c == '\n')
+			break;
+
+		if(--len == 0)
+		{
+			char *linen = realloc(*linep, sizeof *linep + LINE_BUFFER_SIZE);
+			if(linen == NULL)
+				return GITORIUM_MEM_ALLOC;
+
+			len = LINE_BUFFER_SIZE;
+			line = linen + (line - *linep);
+			*linep = linen;
+		}
+
+		*line++ = c;
+	}
+
+	*line = 0;
+	return 0;
+}
+
+static int interactive_help(char *user, char *argv[])
+{
+	return 0;
 }
 
 static struct interactive_cmd
@@ -213,13 +212,17 @@ static struct interactive_cmd
 	int (*help_fn)(char *, char **);
 } int_cmds[] =
 {
-	{"list",   cmd_int_list,  cmd_int_list_help},
-	{"fsck",   cmd_int_fsck,  cmd_int_fsck_help},
+	{"list",   &cmd_int_list,   &cmd_int_list_help},
+	{"fsck",   &cmd_int_fsck,   &cmd_int_fsck_help},
 	{NULL}
 };
 
 static int (*is_command_valid(char *argv[]))(char *, char **)
 {
+	if (NULL == argv[0] ||
+		(!strcmp("help", argv[0]) && NULL == argv[1]))
+		return interactive_help;
+
 	for (struct interactive_cmd *cmd = int_cmds; cmd->name ; cmd++)
 	{
 		if (!strcmp(argv[0], "help"))
@@ -233,11 +236,11 @@ static int (*is_command_valid(char *argv[]))(char *, char **)
 	}
 	return NULL;
 }
-
+/*
 static void trap_sigint(int sig)
 {
 	//@todo I want SIGINT to clear the current line and start a new one.
-}
+}*/
 
 static int run_interactive(char *user)
 {

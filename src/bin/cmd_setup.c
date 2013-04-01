@@ -308,17 +308,35 @@ static int setup__admin_repo(char *pubkey, int force)
 
 		git_repository_free(bRepo);
 
-		char *hFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-update") + 1));
-		strcat(strcpy(hFullpath, rFullpath), "/hooks/post-update");
-		symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-admin", hFullpath);
+		char *puFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/post-update") + 1));
+		if (NULL == puFullpath)
+		{
+			free(rFullpath);
+			git_repository_free(repo);
+			return GITORIUM_MEM_ALLOC;
+		}
+		strcat(strcpy(puFullpath, rFullpath), "/hooks/post-update");
+		symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-admin", puFullpath);
+		free(puFullpath);
 
-		hFullpath = realloc(hFullpath, sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
-		strcat(strcpy(hFullpath, rFullpath), "/hooks/update");
-		symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-admin", hFullpath);
-
-		free(hFullpath);
+		char *uFullpath = malloc(sizeof(char) * (strlen(rFullpath) + strlen("/hooks/update") + 1));
+		if (NULL == uFullpath)
+		{
+			free(rFullpath);
+			git_repository_free(repo);
+			return GITORIUM_MEM_ALLOC;
+		}
+		strcat(strcpy(uFullpath, rFullpath), "/hooks/update");
+		symlink(CMAKE_INSTALL_PREFIX"/bin/gitorium-hook-admin", uFullpath);
+		free(uFullpath);
 
 		rUrl = malloc(sizeof("file://") + sizeof(char)*(strlen(rFullpath) + 1));
+		if (NULL == rUrl)
+		{
+			free(rFullpath);
+			git_repository_free(repo);
+			return GITORIUM_MEM_ALLOC;
+		}
 		strcat(strcpy(rUrl, "file://"), rFullpath);
 		free(rFullpath);
 
@@ -331,9 +349,9 @@ static int setup__admin_repo(char *pubkey, int force)
 			return GITORIUM_ERROR;
 		}
 
-			free(rUrl);
+		free(rUrl);
 
-		#ifndef _NO_GIT2_PUSH  // libgit2 cannot push repositories ATM, so we must fork and call git itself.
+		#ifndef _NO_GIT2_PUSH  // libgit2 cannot push repositories ATM, so we must call git.
 		if (git_remote_connect(rRemote, GIT_DIR_PUSH))
 		{
 			error("Could not push the repository.");
@@ -353,17 +371,17 @@ static int setup__admin_repo(char *pubkey, int force)
 			return GITORIUM_ERROR;
 		}
 		#endif
+		
+		git_remote_free(rRemote);
 
 		if (gitorium_execlp(NULL, NULL, "rm", "rm", "-rf", ".gitorium-admin", (char *) NULL))
 		{
 			error("Failed to launch external program 'rm'.");
 			error("Please remove the .gitorium-admin directory manually.");
-			git_remote_free(rRemote);
 			git_repository_free(repo);
 			return GITORIUM_ERROR;
 		}
 
-		git_remote_free(rRemote);
 		git_repository_free(repo);
 		return 0;
 	}

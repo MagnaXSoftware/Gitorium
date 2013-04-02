@@ -40,9 +40,9 @@ static unsigned int gitio__vformat(const char *format, va_list args)
 	return n;
 }
 
-void gitio_flush(void)
+void gitio_flush(int fd)
 {
-	gitio__write(fileno(stdout), "0000", 4);
+	gitio__write(fd, "0000", 4);
 }
 
 unsigned int gitio_sformat(char **out, const char *format, ...)

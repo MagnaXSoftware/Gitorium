@@ -3,7 +3,7 @@
 
 #include "../common.h"
 
-void gitio_flush(void);
+void gitio_flush(int fd);
 
 unsigned int gitio_sformat(char **out, const char *format, ...);
 void gitio_write(int fd, const char *format, ...);

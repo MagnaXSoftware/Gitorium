@@ -1,15 +1,5 @@
 #include "main.h"
 
-static void initialize(void)
-{
-	gitorium__config_init();
-}
-
-static void denitialize(void)
-{
-	gitorium__config_close();
-}
-
 static void http_header(const char *field, const char *value)
 {
 	printf("%s: %s\n", field, value);
@@ -48,6 +38,13 @@ static void http_end_headers(void)
 	printf("\n");
 }
 
+static void exec__redirect_stdio(void *payload)
+{
+	dup2(fileno(stdin), 0);
+	dup2(fileno(stdout), 1);
+	dup2(fileno(stderr), 2);
+}
+
 static void get_info_refs(const char *loc)
 {
 	http_status(200, "OK");
@@ -56,19 +53,9 @@ static void get_info_refs(const char *loc)
 	http_end_headers();
 
 	gitio_write(fileno(stdout), "# service=git-upload-pack\n");
-	gitio_flush();
+	gitio_flush(fileno(stdout));
 
-	pid_t pID = fork();
-	if (pID == 0)                // child
-	{
-		dup2(fileno(stdout), 1);
-		dup2(fileno(stderr), 2);
-
-		execlp("git-upload-pack", "git-upload-pack", "--stateless-rpc", "--advertise-refs", loc, (char *) NULL);
-		_exit(1);
-	}
-
-	waitpid(pID, NULL, 0);
+	gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", "--advertise-refs", loc, (char *) NULL);
 }
 
 static void post_git_upload_pack(const char *loc)
@@ -78,18 +65,7 @@ static void post_git_upload_pack(const char *loc)
 	http_cache_none();
 	http_end_headers();
 
-	pid_t pID = fork();
-	if (pID == 0)                // child
-	{
-		dup2(fileno(stdin), 0);
-		dup2(fileno(stdout), 1);
-		dup2(fileno(stderr), 2);
-
-		execlp("git-upload-pack", "git-upload-pack", "--stateless-rpc", loc, (char *) NULL);
-		_exit(1);
-	}
-
-	waitpid(pID, NULL, 0);
+	gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", loc, (char *) NULL);
 }
 
 static struct cmd_service {
@@ -97,14 +73,14 @@ static struct cmd_service {
 	const char *exp;
 	void (*fn)(const char *);
 } services[] = {
-	{"GET",     "/info/refs$",          get_info_refs},
-	{"POST",    "/git-upload-pack$",    post_git_upload_pack},
+	{"GET",     "/info/refs$",          &get_info_refs},
+	{"POST",    "/git-upload-pack$",    &post_git_upload_pack},
 	{NULL}
 };
 
 int main(void)
 {
-	initialize();
+	gitorium__config_init();
 
 	while (FCGI_Accept() >= 0)   {
 		char *method = getenv("REQUEST_METHOD");
@@ -122,9 +98,8 @@ int main(void)
 		if (!strcmp(method, "HEAD"))
 			method = "GET";
 
-		for (unsigned int i = 0; i < ARRAY_SIZE(services); i++)
+		for (struct cmd_service *s = services; s->method; s++)
 		{
-			struct cmd_service *s = &services[i];
 			regex_t r;
 			regmatch_t out[1];
 
@@ -141,14 +116,17 @@ int main(void)
 				continue;
 
 //use string functions here instead
-			char *rel = malloc(sizeof(char) * (strlen(doc_uri) - (out[0].rm_eo - out[0].rm_so) + 1));
-			memcpy(rel, doc_uri, (sizeof(char) * (strlen(doc_uri) - (out[0].rm_eo - out[0].rm_so))));
+			char *rel = malloc(sizeof(char) * (out[0].rm_so));
+			//@todo check malloc
+			strncpy(rel, doc_uri, (out[0].rm_so));
+			rel[out[0].rm_so] = '\0';
 			regfree(&r);
 
 			char *rPath;
 			config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
 
 			char *loc = malloc(sizeof(char) * (strlen(rPath) + strlen(rel+1) + 1));
+			//@todo check malloc
 			strcat(strcpy(loc, rPath), rel+1);
 			free(rel);
 
@@ -169,7 +147,7 @@ int main(void)
 		}
 	}
 
-	denitialize();
+	gitorium__config_close();
 
 	return 0;
 }

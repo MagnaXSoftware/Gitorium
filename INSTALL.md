@@ -1,7 +1,7 @@
 INSTALLATION
 ============
 
-If you have the source distribution of Gitorium, you need to compile it prior to using it. At the moment, Gitorium is compiled on Ubuntu 12.04, 12.10 and 13.04 in both amd64 and i386 configurations.
+If you have the source distribution of Gitorium, you need to compile it.
 
 Requirements
 ------------

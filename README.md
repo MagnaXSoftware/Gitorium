@@ -41,6 +41,8 @@ Run the setup command
 Administration
 --------------
 
+See [Workflow.md](Workflow.md#administration) for more details.
+
 Gitorium's administration is mostly done through a special git repository. Using 
 the admin's key pair, clone the `gitorium-admin` repository. That repository 
 holds a configuration file, `gitorium.conf`, and a directory, `keys`.
@@ -60,6 +62,8 @@ modified there.
 
 Usage
 -----
+
+See [Workflow.md](Workflow.md#end-user-usage) for more details.
 
 Gitorium aims to make itself transparent to the end user. For that reason, 
 Gitorium-hosted git repositories can be cloned over ssh the same way regular 

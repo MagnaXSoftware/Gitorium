@@ -82,18 +82,20 @@ int cmd_int_list(char *user, char *args[])
 	char *opt;
 
 	if (NULL == args[1])
-		opt = "repos";
+		opt = "help";
 	else
 		opt = args[1];
 
 	switch (opt[0])
 	{
+		case 'h':
+			return cmd_int_list_help(user, args);
 		case 'r':
 			return int_list_repos();
 		case 'g':
 			return int_list_groups();
 		case 'u':
-			return GITORIUM_ERROR;
+			return int_list_users();
 		default:
 			errorf("%s is not a known object", opt);
 			cmd_int_list_help(user, args);
@@ -105,7 +107,6 @@ int cmd_int_list_help(char *user, char *args[])
 {
 	puts("list [repos|groups|users]");
 	puts("");
-	puts("Lists the known objects.");
-	puts("If none is given, defaults to repositories.");
+	puts("Lists the known objects of the specified type.");
 	return 0;
 }

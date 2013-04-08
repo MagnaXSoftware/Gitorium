@@ -92,7 +92,6 @@ static int setup__admin_repo(char *pubkey, int force)
 	char *buffer, *rFullpath, *rUrl, *conf, *user;
 	const char *rPath;
 	struct stat rStat;
-	pid_t pID;
 
 	config_lookup_string(&aCfg, "repositories", &rPath);
 
@@ -147,7 +146,7 @@ static int setup__admin_repo(char *pubkey, int force)
 
 // Copying the key
 		fseek(pFile , 0 , SEEK_END);
-		int size = ftell(pFile);
+		unsigned int size = ftell(pFile);
 		rewind(pFile);
 
 		buffer = malloc(sizeof(char) * size);

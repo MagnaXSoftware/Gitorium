@@ -40,9 +40,9 @@ static inline void http_end_headers(void)
 
 static void exec__redirect_stdio(void *payload)
 {
-	dup2(fileno(stdin), 0);
+	/*dup2(fileno(stdin), 0);
 	dup2(fileno(stdout), 1);
-	dup2(fileno(stderr), 2);
+	dup2(fileno(stderr), 2);*/
 }
 
 static void get_info_refs(const char *loc)
@@ -55,7 +55,7 @@ static void get_info_refs(const char *loc)
 	gitio_fwrite(stdout, "# service=git-upload-pack\n");
 	gitio_fflush(stdout);
 
-	gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", "--advertise-refs", loc, (char *) NULL);
+	//gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", "--advertise-refs", loc, (char *) NULL);
 }
 
 static void post_git_upload_pack(const char *loc)
@@ -65,7 +65,7 @@ static void post_git_upload_pack(const char *loc)
 	http_cache_none();
 	http_end_headers();
 
-	gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", loc, (char *) NULL);
+	//gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", loc, (char *) NULL);
 }
 
 static struct cmd_service {

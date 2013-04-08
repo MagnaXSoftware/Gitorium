@@ -14,7 +14,7 @@ int gitorium_execvp(void (*cb)(void *), void *payload, const char **argv)
 	}
 	else if (pID < 0)            // failed to fork
 	{
-		return GITORIUM_ERROR;
+		return GITORIUM_EXTERN;
 	}
 
 	waitpid(pID, NULL, 0);

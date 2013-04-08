@@ -262,7 +262,7 @@ static int setup__admin_repo(char *pubkey, int force)
 			return GITORIUM_ERROR;
 		}
 
-		if (git_signature_now(&rAuthor, "Gitorium", "Gitorium@local"))
+		if (git_signature_now(&rAuthor, "Gitorium", "gitorium@local"))
 		{
 			error("Could not create a commit author.");
 			git_tree_free(rTree);
@@ -286,14 +286,14 @@ static int setup__admin_repo(char *pubkey, int force)
 
 		if (!stat(rFullpath, &rStat))
 		{
-			if (gitorium_execlp(NULL, NULL, "rm", "-rf", rFullpath, (char *) NULL))
+			if (rrmdir(rFullpath))
 			{
 				error("Failed to launch external program 'rm'.");
 				error("Please remove the admin directory manually.");
 				errorf("%s\n", rFullpath);
 				free(rFullpath);
 				git_repository_free(repo);
-				return GITORIUM_ERROR;
+				return GITORIUM_EXTERN;
 			}
 		}
 
@@ -367,18 +367,18 @@ static int setup__admin_repo(char *pubkey, int force)
 			error("Failed to launch external program 'git push'.");
 			git_remote_free(rRemote);
 			git_repository_free(repo);
-			return GITORIUM_ERROR;
+			return GITORIUM_EXTERN;
 		}
 		#endif
 
 		git_remote_free(rRemote);
 
-		if (gitorium_execlp(NULL, NULL, "rm", "-rf", ".gitorium-admin", (char *) NULL))
+		if (rrmdir(".gitorium-admin"))
 		{
 			error("Failed to launch external program 'rm'.");
 			error("Please remove the .gitorium-admin directory manually.");
 			git_repository_free(repo);
-			return GITORIUM_ERROR;
+			return GITORIUM_EXTERN;
 		}
 
 		git_repository_free(repo);

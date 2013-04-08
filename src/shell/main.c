@@ -80,7 +80,7 @@ static int run_non_interactive(const char *user, char *orig)
 				fatal("insufficient permissions");
 				free(rFullpath);
 				free(irepoName);
-				return GITORIUM_ERROR;
+				return GITORIUM_NOPERM;
 			}
 
 			struct stat rStat;
@@ -143,10 +143,11 @@ static int run_non_interactive(const char *user, char *orig)
 				if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
 				{
 					fatal("insufficient permissions");
+					gitio_fflush(stdout);
 					config_destroy(&cfg);
 					free(rFullpath);
 					free(irepoName);
-					return GITORIUM_ERROR;
+					return GITORIUM_NOPERM;
 				}
 				else
 					break;
@@ -159,7 +160,7 @@ static int run_non_interactive(const char *user, char *orig)
 				fatal("repository not found");
 				free(rFullpath);
 				free(irepoName);
-				return GITORIUM_ERROR;
+				return GITORIUM_REPO_NOEXISTS;
 			}
 		}
 
@@ -169,7 +170,7 @@ static int run_non_interactive(const char *user, char *orig)
 		{
 			fatalf("failed to launch %s", cmd->name);
 			free(rFullpath);
-			return GITORIUM_ERROR;
+			return GITORIUM_EXTERN;
 		}
 
 		return 0;

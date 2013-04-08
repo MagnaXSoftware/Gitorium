@@ -111,6 +111,7 @@ int main(void)
 			{
 				http_status(500, "Internal Server Error");
 				http_end_headers();
+				fatal("Bad regex");
 				break;
 			}
 			if (regexec(&r, doc_uri, 1, out, 0))

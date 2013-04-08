@@ -80,7 +80,7 @@ void repo_list_refs(git_repository **repo)
 	// can re-implement git-upload-pack, I don't have a choice.
 	char *cap = "multi_ack thin-pack side-band side-band-64k"
 			" ofs-delta shallow no-progress include-tag"
-			" multi_ack_detailed no-done";
+			" multi_ack_detailed no-done agent=gitorium/"GITORIUM_VERSION;
 	git_strarray ref_list;
 
 	git_reference_list(&ref_list, *repo, GIT_REF_LISTALL);

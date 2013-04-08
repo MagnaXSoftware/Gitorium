@@ -82,6 +82,7 @@ int main(void)
 {
 	gitorium__config_init();
 
+	mainloop:
 	while (FCGI_Accept() >= 0)   {
 		char *method = getenv("REQUEST_METHOD");
 		char *doc_uri = getenv("DOCUMENT_URI");
@@ -142,7 +143,7 @@ int main(void)
 			s->fn(loc);
 
 			free(loc);
-			break;
+			goto mainloop;
 		}
 
 		http_status(404, "Not Found");

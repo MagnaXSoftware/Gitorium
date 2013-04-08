@@ -65,6 +65,9 @@ char *repo_massage(char *orig)
 	if ('\'' == orig[strlen(orig)-1])
 		orig[strlen(orig)-1] = 0;
 
+	if ('/' == orig[0])
+		orig++;
+
 	if ('/' == orig[strlen(orig)-1])
 		orig[strlen(orig)-1] = 0;
 

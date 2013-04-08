@@ -126,6 +126,8 @@ static int run_non_interactive(const char *user, char *orig)
 				return GITORIUM_ERROR;
 			}
 
+			int not_found = 1;
+
 			for (int i = 0; i < config_setting_length(setting); i++)
 			{
 				config_setting_t *repo = config_setting_get_elem(setting, i);
@@ -135,6 +137,8 @@ static int run_non_interactive(const char *user, char *orig)
 
 				if (strcmp(name, repoName))
 					continue;
+
+				not_found = 0;
 
 				if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
 				{
@@ -149,6 +153,14 @@ static int run_non_interactive(const char *user, char *orig)
 			}
 
 			config_destroy(&cfg);
+
+			if (not_found)
+			{
+				fatal("repository not found");
+				free(rFullpath);
+				free(irepoName);
+				return GITORIUM_ERROR;
+			}
 		}
 
 		free(irepoName);

@@ -70,6 +70,19 @@ void gitio_fwrite(FILE *stream, const char *format, ...)
 
 	gitio__fwrite(stream, buffer, n, sizeof(char));
 }
+
+void gitio_write(const char *format, ...)
+{
+	va_list args;
+	unsigned int n;
+
+	va_start(args, format);
+	n = gitio__vformat(format, args);
+	va_end(args);
+
+	gitio__fwrite(stdout, buffer, n, sizeof(char));
+}
+
 /*
 int gitio_read(int fd, char *buffer, ssize_t size)
 {

@@ -6,7 +6,10 @@
 #include <git2.h>
 #include <unistd.h>
 
-int repo_create(char *name);
-char *repo_massage(char *orig);
+#include "gitio.h"
+
+int     repo_create     (char *name);
+char   *repo_massage    (char *orig);
+void    repo_list_refs  (git_repository **repo);
 
 #endif // REPO_H_INCLUDED

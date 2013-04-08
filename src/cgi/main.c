@@ -37,25 +37,39 @@ static inline void http_end_headers(void)
 {
 	printf("\n");
 }
-
+/*
 static void exec__redirect_stdio(void *payload)
 {
-	/*dup2(fileno(stdin), 0);
+	dup2(fileno(stdin), 0);
 	dup2(fileno(stdout), 1);
-	dup2(fileno(stderr), 2);*/
-}
+	dup2(fileno(stderr), 2);
+}*/
 
 static void get_info_refs(const char *loc)
 {
+	if (has_param("service=git-upload-pack"))
+	{
+		http_status(403, "Forbidden");
+		http_end_headers();
+		fatal("dumb http protocol is not supported");
+		return;
+	}
+
 	http_status(200, "OK");
 	http_header("Content-Type", "application/x-git-upload-pack-advertisement");
 	http_cache_none();
 	http_end_headers();
 
-	gitio_fwrite(stdout, "# service=git-upload-pack\n");
+	gitio_write("# service=git-upload-pack\n");
 	gitio_fflush(stdout);
 
-	//gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", "--advertise-refs", loc, (char *) NULL);
+	git_repository *repo;
+
+	git_repository_open(&repo, loc);
+	repo_list_refs(&repo);
+	git_repository_free(repo);
+
+	gitio_fflush(stdout);
 }
 
 static void post_git_upload_pack(const char *loc)
@@ -92,8 +106,7 @@ int main(void)
 		{
 			http_status(500, "Internal Server Error");
 			http_end_headers();
-			fatal("No REQUEST_METHOD or DOCUMENT_URI was given.\n"
-				"Check your server config.");
+			fatal("no REQUEST_METHOD or DOCUMENT_URI was given");
 			continue;
 		}
 		if (!strcmp(method, "HEAD"))
@@ -111,7 +124,7 @@ int main(void)
 			{
 				http_status(500, "Internal Server Error");
 				http_end_headers();
-				fatal("Bad regex");
+				fatal("bad regex");
 				break;
 			}
 			if (regexec(&r, doc_uri, 1, out, 0))
@@ -124,7 +137,7 @@ int main(void)
 			regfree(&r);
 
 			char *rPath;
-			config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
+			config_lookup_string(&aCfg, "repositories", (const char **) &rPath);
 
 			char *loc = malloc(sizeof(char) * (strlen(rPath) + strlen(rel+1) + 1));
 			//@todo check malloc
@@ -137,7 +150,7 @@ int main(void)
 			{
 				http_status(404, "Not Found");
 				http_end_headers();
-				fatal("The specified repository does not exist.");
+				fatal("the specified repository does not exist");
 				break;
 			}
 
@@ -149,7 +162,7 @@ int main(void)
 
 		http_status(404, "Not Found");
 		http_end_headers();
-		fatal("The given method and URL do not match anything known.");
+		fatal("the given method and URL do not match anything known");
 	}
 
 	gitorium__config_close();

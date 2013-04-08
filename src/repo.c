@@ -86,9 +86,7 @@ void repo_list_refs(git_repository **repo)
 	git_reference_list(&ref_list, *repo, GIT_REF_LISTALL);
 
 	if (0 == ref_list.count)
-	{
 		gitio_write("0000000000000000000000000000000000000000 capabilities^{}%c%s\n", 0, cap);
-	}
 	else
 	{
 		git_reference *ref;

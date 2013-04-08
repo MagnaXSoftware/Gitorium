@@ -4,7 +4,7 @@ int main(int argc, char **argv)
 {
 	/* This program will have to:
 	 *  * read main configuration
-	 *  * read repo configuration from admin repoS
+	 *  * read repo configuration from admin repos
 	 *  * run each hook for the current repo
 	 */
 
@@ -15,13 +15,14 @@ int main(int argc, char **argv)
 
 	gitorium__config_init();
 
-	// We receive arguments from git as such: name old_oid new_oid
 	if (argc != 3)
 	{
-		error("We didn't start as an update hook!");
+		//post-update mode
+		exit = 0;
 	}
 	else
 	{
+		//update mode
 		exit = 0;
 	}
 

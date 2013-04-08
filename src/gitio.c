@@ -1,15 +1,15 @@
 #include "gitio.h"
 
-static ssize_t gitio__write(int fd, const void *buffer, ssize_t n)
+static ssize_t gitio__fwrite(FILE *stream, const void *buf, ssize_t len, ssize_t size)
 {
-	ssize_t nn = n;
-	while (n)
+	ssize_t nn = len;
+	while (len)
 	{
-		int ret = write(fd, buffer, n);
+		int ret = fwrite(buf, size, len, stream);
 		if (ret > 0)
 		{
-			buffer = (char *) buffer + ret;
-			n -= ret;
+			buf = (char *) buf + ret;
+			len -= ret;
 			continue;
 		}
 		if (!ret)
@@ -27,7 +27,7 @@ static unsigned int gitio__vformat(const char *format, va_list args)
 	int n;
 
 	n = vsnprintf(buffer + 4, _FORMAT_SIZE - 4, format, args);
-	if (n >= (signed int) sizeof(buffer) - 4)
+	if (n >= _FORMAT_SIZE - 4)
 		return -1;
 
 	n += 4;
@@ -40,9 +40,9 @@ static unsigned int gitio__vformat(const char *format, va_list args)
 	return n;
 }
 
-void gitio_flush(int fd)
+void gitio_fflush(FILE *stream)
 {
-	gitio__write(fd, "0000", 4);
+	gitio__fwrite(stream, "0000", 4, sizeof(char));
 }
 
 unsigned int gitio_sformat(char **out, const char *format, ...)
@@ -59,7 +59,7 @@ unsigned int gitio_sformat(char **out, const char *format, ...)
 	return n;
 }
 
-void gitio_write(int fd, const char *format, ...)
+void gitio_fwrite(FILE *stream, const char *format, ...)
 {
 	va_list args;
 	unsigned int n;
@@ -68,9 +68,9 @@ void gitio_write(int fd, const char *format, ...)
 	n = gitio__vformat(format, args);
 	va_end(args);
 
-	gitio__write(fd, buffer, n);
+	gitio__fwrite(stream, buffer, n, sizeof(char));
 }
-
+/*
 int gitio_read(int fd, char *buffer, ssize_t size)
 {
 	int len, ret;
@@ -102,7 +102,7 @@ int gitio_read(int fd, char *buffer, ssize_t size)
 	ret = read(fd, buffer, len);
 	buffer[len] = 0;
 	return ret;
-}
+}*/
 
 void gitio_truncate(char *buffer, ssize_t size)
 {

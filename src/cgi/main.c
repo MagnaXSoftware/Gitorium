@@ -20,20 +20,20 @@ static void http_date(const char *name, const unsigned long offset)
 	http_header(name, value);
 }
 
-static void http_cache_none(void)
+static inline void http_cache_none(void)
 {
 	http_header("Expires", "Fri, 01 Jan 1980 00:00:00 GMT");
 	http_header("Pragma", "no-cache");
 	http_header("Cache-Control", "no-cache, max-age=0, must-revalidate");
 }
 
-static void http_cache_forever(void)
+static inline void http_cache_forever(void)
 {
 	http_date("Expires", 31536000);
 	http_header("Cache-Control", "public, max-age=31536000");
 }
 
-static void http_end_headers(void)
+static inline void http_end_headers(void)
 {
 	printf("\n");
 }
@@ -52,8 +52,8 @@ static void get_info_refs(const char *loc)
 	http_cache_none();
 	http_end_headers();
 
-	gitio_write(fileno(stdout), "# service=git-upload-pack\n");
-	gitio_flush(fileno(stdout));
+	gitio_fwrite(stdout, "# service=git-upload-pack\n");
+	gitio_fflush(stdout);
 
 	gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", "--advertise-refs", loc, (char *) NULL);
 }
@@ -115,7 +115,6 @@ int main(void)
 			if (regexec(&r, doc_uri, 1, out, 0))
 				continue;
 
-//use string functions here instead
 			char *rel = malloc(sizeof(char) * (out[0].rm_so));
 			//@todo check malloc
 			strncpy(rel, doc_uri, (out[0].rm_so));
@@ -145,6 +144,10 @@ int main(void)
 			free(loc);
 			break;
 		}
+
+		http_status(404, "Not Found");
+		http_end_headers();
+		fatal("The given method and URL do not match anything known.");
 	}
 
 	gitorium__config_close();

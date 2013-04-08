@@ -3,6 +3,10 @@
 
 #define _GNU_SOURCE
 
+#ifdef _USE_FCGI_STDIO
+    #include <fcgi_stdio.h>
+#endif // _USE_FCGI_STDIO
+
 #include <string.h>
 #include <stdlib.h>
 #include <git2.h>
@@ -10,12 +14,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <stdarg.h>
-
-#ifdef _USE_FCGI_STDIO
-    #include <fcgi_stdio.h>
-#else // _USE_FCGI_STDIO
-    #include <stdio.h>
-#endif // _USE_FCGI_STDIO
+#include <stdio.h>
 
 #include "config.h"
 #include "specific.h"
@@ -30,7 +29,7 @@
 #ifdef _USE_FCGI_STDIO
     // we redirect errors to stdout when using fcgi
     #undef errorf
-    #define errorf(format, ...)    fprintf(stdout, format"\n", __VA_ARGS__)
+    #define errorf(format, ...)    printf(format"\n", __VA_ARGS__)
 #endif // _USE_FCGI_STDIO
 
 #define debug(string)          error("debug: "string)

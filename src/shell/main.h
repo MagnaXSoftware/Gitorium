@@ -1,7 +1,7 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
-#define LINE_BUFFER_SIZE 50
+#define LINE_BUFFER_SIZE 64
 
 #include "../common.h"
 

@@ -8,8 +8,9 @@
 
 #include "gitio.h"
 
-int     repo_create     (char *name);
-char   *repo_massage    (char *orig);
-void    repo_list_refs  (git_repository **repo);
+int     repo_create        (char *name);
+char   *repo_massage       (char *orig);
+void    repo_list_refs     (git_repository **repo);
+void    repo_upload_pack   (git_repository **repo, int stateless);
 
 #endif // REPO_H_INCLUDED

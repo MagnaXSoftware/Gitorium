@@ -155,3 +155,7 @@ void repo_list_refs(git_repository **repo)
 
 	git_strarray_free(&ref_list);
 }
+
+void repo_upload_pack(git_repository **repo, int stateless) 
+{
+}

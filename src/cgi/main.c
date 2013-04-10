@@ -37,13 +37,6 @@ static inline void http_end_headers(void)
 {
 	printf("\n");
 }
-/*
-static void exec__redirect_stdio(void *payload)
-{
-	dup2(fileno(stdin), 0);
-	dup2(fileno(stdout), 1);
-	dup2(fileno(stderr), 2);
-}*/
 
 static void get_info_refs(const char *loc)
 {
@@ -90,6 +83,16 @@ static void post_git_upload_pack(const char *loc)
 	http_end_headers();
 
 	//gitorium_execlp(&exec__redirect_stdio, NULL, "git-upload-pack", "--stateless-rpc", loc, (char *) NULL);
+
+	printf("cl: %s\n", getenv("CONTENT_LENGTH"));
+
+	git_repository *repo;
+
+	git_repository_open(&repo, loc);
+	repo_upload_pack(&repo, 1);
+	git_repository_free(repo);
+
+	gitio_fflush(stdout);
 }
 
 static struct cmd_service {

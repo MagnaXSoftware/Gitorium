@@ -84,13 +84,12 @@ void gitio_write(const char *format, ...)
 	gitio__fwrite(stdout, buffer, n, sizeof(char));
 }
 
-/*
-int gitio_read(int fd, char *buffer, ssize_t size)
+int gitio_fread(FILE *stream, char *buffer, ssize_t size)
 {
 	int len, ret;
 	char linelen[5];
 
-	read(fd, linelen, 4);
+	fread(linelen, sizeof(char), 4, stream);
 
 	linelen[4] = 0;
 
@@ -113,10 +112,10 @@ int gitio_read(int fd, char *buffer, ssize_t size)
 		return 0;
 	}
 
-	ret = read(fd, buffer, len);
+	ret = fread(buffer, sizeof(char), len, stream);
 	buffer[len] = 0;
 	return ret;
-}*/
+}
 
 void gitio_truncate(char *buffer, ssize_t size)
 {

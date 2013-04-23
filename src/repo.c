@@ -150,6 +150,8 @@ void repo_list_refs(git_repository **repo)
 			git_reference_free(ref);
 		}
 	}
+	
+	gitio_fflush(stdout);
 
 	git_strarray_free(&ref_list);
 }
@@ -172,6 +174,7 @@ void repo_upload_pack(git_repository **repo, int stateless)
 	else
 	{
 		repo_list_refs(repo);
+		fflush(stdout);
 
 		for (;;)
 		{
@@ -205,7 +208,7 @@ void repo_upload_pack(git_repository **repo, int stateless)
 		commit_node_t *cur = wanted_ref;
 		while (cur)
 		{
-			printf("Commit message: %s\n", git_commit_message(cur->commit));
+			fprintf(stderr, "Commit message: %s\n", git_commit_message(cur->commit));
 			cur = cur->next;
 		}
 

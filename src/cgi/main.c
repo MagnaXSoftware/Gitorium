@@ -61,8 +61,6 @@ static void get_info_refs(const char *loc)
 	git_repository_open(&repo, loc);
 	repo_list_refs(&repo);
 	git_repository_free(repo);
-
-	gitio_fflush(stdout);
 }
 
 static void post_git_upload_pack(const char *loc)

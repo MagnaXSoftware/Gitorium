@@ -94,7 +94,7 @@ int gitio_fread(FILE *stream, char *buffer, size_t size)
 	size_t ret;
 	char linelen[5];
 
-	fread(linelen, sizeof(char), 4, stream);
+	fgets(linelen, 5, stream);
 
 	linelen[4] = 0;
 

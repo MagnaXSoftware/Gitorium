@@ -32,7 +32,7 @@ static void exec__setup_interactive(void *payload)
 	setenv("GITORIUM_USER", (char *)payload, 1);
 }
 
-static void non_int_upload_pack(const char * loc)
+static void non_int_upload_pack(const char *loc)
 {
 	git_repository *repo;
 
@@ -49,9 +49,9 @@ static struct non_interactive_cmd
 	const char *dir;
 } cmd_list[] =
 {
-	{ "git-receive-pack",   &non_int_upload_pack,   PERM_WRITE, "push" },
-	{ "git-upload-pack",    NULL,                   PERM_READ , "pull" },
-	{ "git-upload-archive", NULL,                   PERM_READ , "pull" },
+	{ "git-receive-pack",   NULL,                  PERM_WRITE, "push" },
+	{ "git-upload-pack",    &non_int_upload_pack,  PERM_READ , "pull" },
+	{ "git-upload-archive", NULL,                  PERM_READ , "pull" },
 	{ NULL },
 };
 
@@ -179,7 +179,7 @@ static int run_non_interactive(const char *user, char *orig)
 		if (cmd->fn)
 		{
 			exec__setup_interactive((void *) user);
-			(*cmd->fn)(rFullpath);
+			(*(cmd->fn))(rFullpath);
 		}
 		else
 		{
@@ -190,6 +190,7 @@ static int run_non_interactive(const char *user, char *orig)
 				return GITORIUM_EXTERN;
 			}
 		}
+		free(rFullpath);
 
 		return 0;
 	}

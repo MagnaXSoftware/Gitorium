@@ -74,6 +74,16 @@ static void get_info_refs(const char *loc)
 
 static void post_git_upload_pack(const char *loc)
 {
+	char *cl = getenv("CONTENT_LENGTH"), *ct = getenv("CONTENT_TYPE");
+
+	if (NULL == cl || NULL == ct)
+	{
+		http_status(400, "Bad Request");
+		http_end_headers();
+		fatal("expected POST with Content-Type 'application/x-git-upload-pack-request'");
+		return;
+	}
+
 	http_status(200, "OK");
 	http_header("Content-Type", "application/x-git-upload-pack-result");
 	http_cache_none();

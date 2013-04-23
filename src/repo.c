@@ -101,7 +101,7 @@ void repo_list_refs(git_repository **repo)
 		{
 			git_reference *ref_head;
 			git_reference_resolve(&ref_head, ref);
-			git_oid_fmt(out, git_reference_oid(ref_head));
+			git_oid_fmt(out, git_reference_target(ref_head));
 			gitio_write("%s HEAD%c%s\n", out, 0, cap);
 			cap = NULL;
 			git_reference_free(ref_head);
@@ -125,7 +125,7 @@ void repo_list_refs(git_repository **repo)
 				git_reference_free(goal);
 			}
 
-			git_oid_fmt(out, git_reference_oid(ref));
+			git_oid_fmt(out, git_reference_target(ref));
 
 			if (cap)
 			{
@@ -135,7 +135,7 @@ void repo_list_refs(git_repository **repo)
 			else
 				gitio_write("%s %s\n", out, refname);
 
-			if (!git_tag_lookup(&tag, *repo, git_reference_oid(ref)))
+			if (!git_tag_lookup(&tag, *repo, git_reference_target(ref)))
 			{
 				git_object *target;
 

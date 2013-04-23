@@ -46,7 +46,7 @@ int gitorium__repo_config_load(config_t *cfg)
 
 	free(bFullpath);
 
-	if (git_reference_name_to_oid(&oid, bRepo, "refs/heads/master"))
+	if (git_reference_name_to_id(&oid, bRepo, "refs/heads/master"))
 	{
 		error("Could not resolve the master.");
 		git_repository_free(bRepo);

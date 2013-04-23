@@ -339,7 +339,7 @@ static int setup__admin_repo(char *pubkey, int force)
 		strcat(strcpy(rUrl, "file://"), rFullpath);
 		free(rFullpath);
 
-		if (git_remote_add(&rRemote, repo, "origin", rUrl))
+		if (git_remote_create(&rRemote, repo, "origin", rUrl))
 		{
 			error("Could not add the bare repository as remote.");
 			git_remote_free(rRemote);
@@ -351,7 +351,7 @@ static int setup__admin_repo(char *pubkey, int force)
 		free(rUrl);
 
 		#ifndef _NO_GIT2_PUSH  // libgit2 cannot push repositories ATM, so we must call git.
-		if (git_remote_connect(rRemote, GIT_DIR_PUSH))
+		if (git_remote_connect(rRemote, GIT_DIRECTION_PUSH))
 		{
 			error("Could not push the repository.");
 			git_remote_disconnect(rRemote);
@@ -404,18 +404,7 @@ int cmd_setup(int argc, char **argv)
 		return GITORIUM_ERROR;
 	}
 
-	int r = GITORIUM_ERROR;
-
-	if (!strcmp("--force", argv[0]))
-	{
-		r = setup__admin_repo(argv[1], 1);
-	}
-	else
-	{
-		r = setup__admin_repo(argv[0], 0);
-	}
-
-	return r;
+	return setup__admin_repo(argv[0], (!strcmp("--force", argv[0])) ? 1 : 0);
 }
 
 int cmd_setup_help(int argc, char **argv)

@@ -17,8 +17,11 @@ static int ssh__reset(void)
 	return 0;
 }
 
-static int ssh__add(const char *root, git_tree_entry *entry, void *payload)
+static int ssh__add(const char *root, const git_tree_entry *entry, void *payload)
 {
+	printf("root:%s entry:%s\n", root, git_tree_entry_name(entry));
+	return 0;
+
 	if (strcmp("keys/", root))
 		return 0; // For some reason libgit2 walks from the root tree instead of our subtree
 
@@ -55,7 +58,7 @@ int ssh_setup(void)
 {
 	git_repository *bRepo;
 	git_commit *hCommit;
-	git_tree *hTree, *kTree;
+	git_tree *hTree, *mTree;
 	git_oid oid;
 
 	char *bFullpath, *rPath;
@@ -76,7 +79,7 @@ int ssh_setup(void)
 
 	free(bFullpath);
 
-	if (git_reference_name_to_oid(&oid, bRepo, "refs/heads/master"))
+	if (git_reference_name_to_id(&oid, bRepo, "refs/heads/master"))
 	{
 		error("Could not resolve the master.");
 		git_repository_free(bRepo);
@@ -98,30 +101,28 @@ int ssh_setup(void)
 		return GITORIUM_ERROR;
 	}
 
-	if (git_tree_get_subtree(&kTree, hTree, "keys"))
+	git_commit_free(hCommit);
+
+	if (git_tree_lookup(&mTree, bRepo, git_tree_entry_id(git_tree_entry_byname(hTree, "keys"))))
 	{
 		error("Could not find the \"keys\" subtree in the main tree.");
 		git_tree_free(hTree);
-		git_commit_free(hCommit);
 		git_repository_free(bRepo);
 		return GITORIUM_ERROR;
 	}
 
 	git_tree_free(hTree);
-	git_commit_free(hCommit);
 
 	if (ssh__reset())
 	{
-		git_tree_free(kTree);
-		git_tree_free(hTree);
-		git_commit_free(hCommit);
+		git_tree_free(mTree);
 		git_repository_free(bRepo);
 		return GITORIUM_ERROR;
 	}
 
-	git_tree_walk(kTree, ssh__add, GIT_TREEWALK_POST, bRepo);
+	git_tree_walk(mTree, GIT_TREEWALK_POST, ssh__add, bRepo);
 
-	git_tree_free(kTree);
+	git_tree_free(mTree);
 	git_repository_free(bRepo);
 
 	return 0;

@@ -166,6 +166,9 @@ struct commit_node
 void repo_upload_pack(git_repository **repo, int stateless) 
 {
 	commit_node_t *wanted_ref = NULL;
+	commit_node_t *common_ref = NULL;
+
+	int multi_ack = 0;
 
 	if (stateless)
 	{
@@ -199,17 +202,64 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					goto cleanup;
 				}
 
-				commit_node_t *new_ref = malloc(sizeof(commit_node_t));
-				new_ref->commit = commit;
-				new_ref->next = wanted_ref;
-				wanted_ref = new_ref;
+				commit_node_t new_ref = {commit, wanted_ref};
+				wanted_ref = &new_ref;
+
+				continue;
 			}
 		}
-		commit_node_t *cur = wanted_ref;
-		while (cur)
+
+		int found_common = 0;
+		
+		for (;;)
 		{
-			fprintf(stderr, "Commit message: %s\n", git_commit_message(cur->commit));
-			cur = cur->next;
+			git_oid oid;
+			git_commit *commit;
+			char *line = gitio_fread_line(stdin);
+
+			if (!line && !found_common)
+			{
+				gitio_write("NAK");
+				fflush(stdout);
+				break;
+			}
+
+			if (!strprecmp(line, "have "))
+			{
+				if ((0 == multi_ack) && found_common)
+					continue;
+
+				if (git_oid_fromstr(&oid, line+5))
+				{
+					fatalf("protocol error, expected to get sha, not '%s'", line);
+					goto cleanup;
+				}
+
+				if (git_commit_lookup(&commit, *repo, &oid))
+				{
+					fatalf("not our ref %.40s", line+5);
+					goto cleanup;
+				}
+
+				commit_node_t new_ref = {commit, common_ref};
+				common_ref = &new_ref;
+				found_common = 1;
+
+				gitio_write("ACK %.40s", line+5);
+				fflush(stdout);
+
+				continue;
+			}
+
+			if (!strprecmp(line, "done"))
+			{
+				if (!found_common)
+				{
+					gitio_write("NAK");
+					fflush(stdout);
+					break;
+				}
+			}
 		}
 
 		goto cleanup;
@@ -218,12 +268,15 @@ void repo_upload_pack(git_repository **repo, int stateless)
 	return;
 
 cleanup:
+	while (common_ref)
+	{
+		git_commit_free(common_ref->commit);
+		common_ref = common_ref->next;
+	}
 	while (wanted_ref)
 	{
 		git_commit_free(wanted_ref->commit);
-		commit_node_t *del = wanted_ref;
 		wanted_ref = wanted_ref->next;
-		free(del);
 	}
 	return;
 }

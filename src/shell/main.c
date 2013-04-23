@@ -221,7 +221,6 @@ static struct interactive_cmd
 } int_cmds[] =
 {
 	{"list",   &cmd_int_list,   &cmd_int_list_help,     "list known objects"},
-	{"fsck",   &cmd_int_fsck,   &cmd_int_fsck_help,     "run git fsck on repositories"},
 	{NULL}
 };
 

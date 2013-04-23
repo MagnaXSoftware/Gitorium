@@ -204,7 +204,6 @@ static int repo__get_common(git_repository **repo)
 		if (!line && !found_common)
 		{
 			gitio_write("NAK\n");
-			fflush(stdout);
 			return 0;
 		}
 
@@ -244,7 +243,6 @@ static int repo__get_common(git_repository **repo)
 		if (!strprecmp(line, "done") && !found_common)
 		{
 			gitio_write("NAK\n");
-			fflush(stdout);
 			return 0;
 		}
 	}
@@ -268,10 +266,12 @@ static int repo__shallow_update(git_repository **repo)
 		git_oid_fmt(id, git_commit_id(ancestor));
 
 		gitio_write("shallow %.40s\n", id);
-		fflush(stdout);
 
 		cur = cur->next;
 	}
+
+	gitio_fflush(stdout);
+
 	return 0;
 }
 
@@ -386,8 +386,12 @@ void repo_upload_pack(git_repository **repo, int stateless)
 		if (repo__shallow_update(repo))
 			goto cleanup;
 
+		fflush(stdout);
+
 		if (repo__get_common(repo))
 			goto cleanup;
+
+		fflush(stdout);
 
 		if (repo__build_pack(repo))
 			goto cleanup;

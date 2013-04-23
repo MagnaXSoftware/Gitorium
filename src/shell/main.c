@@ -32,16 +32,26 @@ static void exec__setup_interactive(void *payload)
 	setenv("GITORIUM_USER", (char *)payload, 1);
 }
 
+static void non_int_upload_pack(const char * loc)
+{
+	git_repository *repo;
+
+	git_repository_open(&repo, loc);
+	repo_upload_pack(&repo, 0);
+	git_repository_free(repo);
+}
+
 static struct non_interactive_cmd
 {
 	const char *name;
+	void (*fn)(const char *);
 	const int perms;
 	const char *dir;
 } cmd_list[] =
 {
-	{ "git-receive-pack",   PERM_WRITE, "push" },
-	{ "git-upload-pack",    PERM_READ , "pull" },
-	{ "git-upload-archive", PERM_READ , "pull" },
+	{ "git-receive-pack",   &non_int_upload_pack,   PERM_WRITE, "push" },
+	{ "git-upload-pack",    NULL,                   PERM_READ , "pull" },
+	{ "git-upload-archive", NULL,                   PERM_READ , "pull" },
 	{ NULL },
 };
 
@@ -166,11 +176,19 @@ static int run_non_interactive(const char *user, char *orig)
 
 		free(irepoName);
 
-		if (gitorium_execlp(&exec__setup_interactive, (void *) user, cmd->name, rFullpath, (char *) NULL))
+		if (cmd->fn)
 		{
-			fatalf("failed to launch %s", cmd->name);
-			free(rFullpath);
-			return GITORIUM_EXTERN;
+			exec__setup_interactive((void *) user);
+			(*cmd->fn)(rFullpath);
+		}
+		else
+		{
+			if (gitorium_execlp(&exec__setup_interactive, (void *) user, cmd->name, rFullpath, (char *) NULL))
+			{
+				fatalf("failed to launch %s", cmd->name);
+				free(rFullpath);
+				return GITORIUM_EXTERN;
+			}
 		}
 
 		return 0;

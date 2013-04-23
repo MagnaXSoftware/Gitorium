@@ -420,7 +420,7 @@ int cmd_setup(int argc, char **argv)
 		(!strcmp("--force", argv[0])) ? 1 : 0);
 }
 
-int cmd_setup_help(int argc, char **argv)
+int cmd_setup_help(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 {
 	puts("gitorium setup <pubkey>\n"
 		"\n"

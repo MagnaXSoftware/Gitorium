@@ -77,13 +77,11 @@ char *repo_massage(char *orig)
 	return orig;
 }
 
+// This will get extended as I get more capabilities
+static char *cap = "agent=gitorium/"GITORIUM_VERSION;
+
 void repo_list_refs(git_repository **repo)
 {
-	// Copied from the git-upload-pack binaries. This is very bad, but until I 
-	// can re-implement git-upload-pack, I don't have a choice.
-	char *cap = "multi_ack thin-pack side-band side-band-64k"
-			" ofs-delta shallow no-progress include-tag"
-			" multi_ack_detailed no-done agent=gitorium/"GITORIUM_VERSION;
 	git_strarray ref_list;
 
 	git_reference_list(&ref_list, *repo, GIT_REF_LISTALL);
@@ -156,6 +154,73 @@ void repo_list_refs(git_repository **repo)
 	git_strarray_free(&ref_list);
 }
 
+typedef struct commit_node commit_node_t;
+struct commit_node
+{
+	git_commit *commit;
+	commit_node_t *next;
+};
+
 void repo_upload_pack(git_repository **repo, int stateless) 
 {
+	commit_node_t *wanted_ref = NULL;
+
+	if (stateless)
+	{
+		//
+	}
+	else
+	{
+		repo_list_refs(repo);
+
+		for (;;)
+		{
+			git_oid oid;
+			git_commit *commit;
+			char *line = gitio_fread_line(stdin);
+
+			if (!line)
+				break;
+
+			if (!strprecmp(line, "want "))
+			{
+				if (git_oid_fromstr(&oid, line+5))
+				{
+					fatalf("protocol error, expected to get sha, not '%s'", line);
+					goto cleanup;
+				}
+
+				if (git_commit_lookup(&commit, *repo, &oid))
+				{
+					fatalf("not our ref %.40s", line+5);
+					goto cleanup;
+				}
+
+				commit_node_t *new_ref = malloc(sizeof(commit_node_t));
+				new_ref->commit = commit;
+				new_ref->next = wanted_ref;
+				wanted_ref = new_ref;
+			}
+		}
+		commit_node_t *cur = wanted_ref;
+		while (cur)
+		{
+			printf("Commit message: %s\n", git_commit_message(cur->commit));
+			cur = cur->next;
+		}
+
+		goto cleanup;
+	}
+
+	return;
+
+cleanup:
+	while (wanted_ref)
+	{
+		git_commit_free(wanted_ref->commit);
+		commit_node_t *del = wanted_ref;
+		wanted_ref = wanted_ref->next;
+		free(del);
+	}
+	return;
 }

@@ -1,4 +1,4 @@
-#include "cmd_int_list.h"
+#include "cmd_internal.h"
 
 static int int_list_repos(void)
 {
@@ -103,7 +103,7 @@ int cmd_int_list(char *user, char *args[])
 	}
 }
 
-int cmd_int_list_help(char *user, char *args[])
+int cmd_int_list_help(char *user __attribute__((unused)), char *args[] __attribute__((unused)))
 {
 	puts("list [repos|groups|users]");
 	puts("");

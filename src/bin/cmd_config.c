@@ -122,7 +122,7 @@ int cmd_config(int argc, char **argv)
 	return EXIT_FAILURE;
 }
 
-int cmd_config_help(int argc, char **argv)
+int cmd_config_help(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 {
 	puts("gitorium config [ list | get <key> ]\n"
 		"\n"

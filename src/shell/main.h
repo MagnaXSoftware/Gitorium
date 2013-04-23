@@ -7,8 +7,7 @@
 
 #include <signal.h>
 
-#include "cmd_int_list.h"
-#include "cmd_int_repo.h"
+#include "cmd_internal.h"
 
 #include "../perms.h"
 #include "../repo.h"

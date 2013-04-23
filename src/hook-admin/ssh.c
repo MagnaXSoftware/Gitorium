@@ -17,7 +17,7 @@ static int ssh__reset(void)
 	return 0;
 }
 
-static int ssh__add(const char *root, const git_tree_entry *entry, void *payload)
+static int ssh__add(const char *root __attribute__((unused)), const git_tree_entry *entry, void *payload)
 {
 	FILE *auth;
 	git_blob *blob;

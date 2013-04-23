@@ -19,12 +19,6 @@ static int ssh__reset(void)
 
 static int ssh__add(const char *root, const git_tree_entry *entry, void *payload)
 {
-	printf("root:%s entry:%s\n", root, git_tree_entry_name(entry));
-	return 0;
-
-	if (strcmp("keys/", root))
-		return 0; // For some reason libgit2 walks from the root tree instead of our subtree
-
 	FILE *auth;
 	git_blob *blob;
 	char *path, *name = (char *) git_tree_entry_name(entry);

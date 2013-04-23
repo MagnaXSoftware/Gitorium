@@ -5,7 +5,8 @@ static ssize_t gitio__fwrite(FILE *stream, const void *buf, ssize_t len, ssize_t
 	ssize_t nn = len;
 	while (len)
 	{
-		int ret = fwrite(buf, size, len, stream);
+		// FCGI_fwrite's first argument is not a const. It should be.
+		int ret = fwrite((void *) buf, size, len, stream);
 		if (ret > 0)
 		{
 			buf = (char *) buf + ret;

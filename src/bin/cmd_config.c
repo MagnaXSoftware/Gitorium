@@ -122,8 +122,10 @@ int cmd_config(int argc, char **argv)
 	return EXIT_FAILURE;
 }
 
-int cmd_config_help(int argc __attribute__((unused)), char **argv __attribute__((unused)))
+int cmd_config_help(int argc, char **argv)
 {
+	UNUSED(argc);
+	UNUSED(argv);
 	puts("gitorium config [ list | get <key> ]\n"
 		"\n"
 		"Retrieves configuration values.\n"

@@ -13,8 +13,10 @@ static struct bin_cmd
 	{NULL}
 };
 
-static int main_help(int argc __attribute__((unused)), char **argv __attribute__((unused)))
+static int main_help(int argc, char **argv)
 {
+	UNUSED(argc);
+	UNUSED(argv);
 	puts("gitorium <command> [<args>]\n"
 		"\n"
 		"Available commands:\n");

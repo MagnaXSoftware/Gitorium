@@ -156,20 +156,101 @@ void repo_list_refs(git_repository **repo)
 	git_strarray_free(&ref_list);
 }
 
+typedef struct
+{
+	int multi_ack;
+} flag_t;
+
+static flag_t transfer_flags =
+{
+	.multi_ack = 0,
+};
+
 typedef struct commit_node commit_node_t;
 struct commit_node
 {
-	git_commit *commit;
+	git_oid oid;
 	commit_node_t *next;
 };
 
+static commit_node_t *wanted_ref = NULL;
+static commit_node_t *common_ref = NULL;
+static commit_node_t *shallow_ref = NULL;
+static int depth = 0;
+
+static int repo__get_common(git_repository **repo)
+{
+	int found_common = 0;
+
+	for (;;)
+	{
+		git_oid oid;
+		git_commit *commit;
+		char *line = gitio_fread_line(stdin);
+
+		if (!line && !found_common)
+		{
+			gitio_write("NAK\n");
+			fflush(stdout);
+			return 0;
+		}
+
+		if (!strprecmp(line, "have "))
+		{
+			if ((0 == transfer_flags.multi_ack) && found_common)
+				continue;
+
+			if (git_oid_fromstr(&oid, line+5))
+			{
+				fatalf("protocol error, expected to get sha, not '%s'", line);
+				return GITORIUM_ERROR;
+			}
+
+			if (git_commit_lookup(&commit, *repo, &oid))
+			{
+				fatalf("not our ref %.40s", line+5);
+				return GITORIUM_ERROR;
+			}
+
+			git_commit_free(commit);
+
+			commit_node_t new_ref = {oid, common_ref};
+			common_ref = &new_ref;
+			found_common = 1;
+
+			gitio_write("ACK %.40s\n", line+5);
+			fflush(stdout);
+
+			continue;
+		}
+
+		if (!strprecmp(line, "done") && !found_common)
+		{
+			gitio_write("NAK\n");
+			fflush(stdout);
+			return 0;
+		}
+	}
+	return GITORIUM_ERROR;
+}
+
+static int repo__build_pack(git_repository **repo)
+{
+	git_packbuilder *pb;
+
+	if (git_packbuilder_new(&pb, *repo))
+	{
+		fatal("unexpected internal error");
+		return GITORIUM_ERROR;
+	}
+
+	git_packbuilder_set_threads(pb, 0);
+
+	return 0;
+}
+
 void repo_upload_pack(git_repository **repo, int stateless) 
 {
-	commit_node_t *wanted_ref = NULL;
-	commit_node_t *common_ref = NULL;
-
-	int multi_ack = 0;
-
 	if (stateless)
 	{
 		//
@@ -178,6 +259,8 @@ void repo_upload_pack(git_repository **repo, int stateless)
 	{
 		repo_list_refs(repo);
 		fflush(stdout);
+
+		int have_flags = 0;
 
 		for (;;)
 		{
@@ -188,8 +271,49 @@ void repo_upload_pack(git_repository **repo, int stateless)
 			if (!line)
 				break;
 
+			if (!strprecmp(line, "shallow "))
+			{
+				if (git_oid_fromstr(&oid, line+8))
+				{
+					fatalf("invalid shallow line: %s", line);
+					goto cleanup;
+				}
+
+				if (git_commit_lookup(&commit, *repo, &oid))
+				{
+					fatalf("invalid shallow object %.40s", line+8);
+					goto cleanup;
+				}
+
+				git_commit_free(commit);
+
+				commit_node_t new_ref = {oid, shallow_ref};
+				shallow_ref = &new_ref;
+
+				continue;
+			}
+
+			if (!strprecmp(line, "deepen "))
+			{
+				char *end;
+
+				depth = strtol(line + 7, &end, 0);
+				if (end == line + 7 || depth <= 0)
+				{
+					fatalf("invalid deepen: %s", line);
+					goto cleanup;
+				}
+
+				continue;
+			}
+
 			if (!strprecmp(line, "want "))
 			{
+				if (!have_flags)
+				{
+					//parse the flags @ line+45
+				}
+
 				if (git_oid_fromstr(&oid, line+5))
 				{
 					fatalf("protocol error, expected to get sha, not '%s'", line);
@@ -202,64 +326,23 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					goto cleanup;
 				}
 
-				commit_node_t new_ref = {commit, wanted_ref};
+				git_commit_free(commit);
+
+				commit_node_t new_ref = {oid, wanted_ref};
 				wanted_ref = &new_ref;
 
 				continue;
 			}
 		}
 
-		int found_common = 0;
-		
-		for (;;)
+		if (repo__get_common(repo))
 		{
-			git_oid oid;
-			git_commit *commit;
-			char *line = gitio_fread_line(stdin);
+			goto cleanup;
+		}
 
-			if (!line && !found_common)
-			{
-				gitio_write("NAK");
-				fflush(stdout);
-				break;
-			}
-
-			if (!strprecmp(line, "have "))
-			{
-				if ((0 == multi_ack) && found_common)
-					continue;
-
-				if (git_oid_fromstr(&oid, line+5))
-				{
-					fatalf("protocol error, expected to get sha, not '%s'", line);
-					goto cleanup;
-				}
-
-				if (git_commit_lookup(&commit, *repo, &oid))
-				{
-					fatalf("not our ref %.40s", line+5);
-					goto cleanup;
-				}
-
-				commit_node_t new_ref = {commit, common_ref};
-				common_ref = &new_ref;
-				found_common = 1;
-
-				gitio_write("ACK %.40s", line+5);
-				fflush(stdout);
-
-				continue;
-			}
-
-			if (!strprecmp(line, "done"))
-			{
-				if (!found_common)
-				{
-					gitio_write("NAK");
-					fflush(stdout);
-					break;
-				}
-			}
+		if (repo__build_pack(repo))
+		{
+			goto cleanup;
 		}
 
 		goto cleanup;
@@ -267,16 +350,6 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 	return;
 
-cleanup:
-	while (common_ref)
-	{
-		git_commit_free(common_ref->commit);
-		common_ref = common_ref->next;
-	}
-	while (wanted_ref)
-	{
-		git_commit_free(wanted_ref->commit);
-		wanted_ref = wanted_ref->next;
-	}
+	cleanup:
 	return;
 }

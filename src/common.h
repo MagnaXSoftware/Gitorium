@@ -37,6 +37,8 @@
 #define fatal(string)          error("fatal: "string)
 #define fatalf(format, ...)    errorf("fatal: "format, __VA_ARGS__)
 
+#define UNUSED(x) (void) x
+
 int gitorium_execvp(void (*cb)(void *), void *payload, const char **argv);
 int gitorium_execlp(void (*cb)(void *), void *payload, const char *file, const char *arg, ...);
 int rrmdir(const char *dir);

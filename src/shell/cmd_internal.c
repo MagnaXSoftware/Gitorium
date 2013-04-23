@@ -103,8 +103,10 @@ int cmd_int_list(char *user, char *args[])
 	}
 }
 
-int cmd_int_list_help(char *user __attribute__((unused)), char *args[] __attribute__((unused)))
+int cmd_int_list_help(char *user, char *args[])
 {
+	UNUSED(user);
+	UNUSED(args);
 	puts("list [repos|groups|users]");
 	puts("");
 	puts("Lists the known objects of the specified type.");

@@ -169,9 +169,22 @@ static flag_t transfer_flags =
 typedef struct commit_node commit_node_t;
 struct commit_node
 {
-	git_oid oid;
+	git_oid *id;
 	commit_node_t *next;
 };
+
+static int oid_inlist(const commit_node_t * const start, const git_oid *id)
+{
+	const commit_node_t *cur = start;
+	while (cur)
+	{
+		if (!git_oid_cmp(cur->id, id))
+			return 1;
+
+		cur = cur->next;
+	}
+	return 0;
+}
 
 static commit_node_t *wanted_ref = NULL;
 static commit_node_t *common_ref = NULL;
@@ -214,12 +227,16 @@ static int repo__get_common(git_repository **repo)
 
 			git_commit_free(commit);
 
-			commit_node_t new_ref = {oid, common_ref};
-			common_ref = &new_ref;
-			found_common = 1;
+			if (!oid_inlist(common_ref, &oid))
+			{
 
-			gitio_write("ACK %.40s\n", line+5);
-			fflush(stdout);
+				commit_node_t new_ref = {&oid, common_ref};
+				common_ref = &new_ref;
+				found_common = 1;
+
+				gitio_write("ACK %.40s\n", line+5);
+				fflush(stdout);
+			}
 
 			continue;
 		}
@@ -232,6 +249,30 @@ static int repo__get_common(git_repository **repo)
 		}
 	}
 	return GITORIUM_ERROR;
+}
+
+static int repo__shallow_update(git_repository **repo)
+{
+	commit_node_t *cur = wanted_ref;
+	while (cur)
+	{
+		git_commit *commit, *ancestor;
+		char id[40];
+
+		git_commit_lookup(&commit, *repo, cur->id);
+		git_commit_nth_gen_ancestor(&ancestor, commit, (unsigned int) depth);
+		git_commit_free(commit);
+		if (!ancestor)
+			return GITORIUM_ERROR;
+
+		git_oid_fmt(id, git_commit_id(ancestor));
+
+		gitio_write("shallow %.40s\n", id);
+		fflush(stdout);
+
+		cur = cur->next;
+	}
+	return 0;
 }
 
 static int repo__build_pack(git_repository **repo)
@@ -287,8 +328,42 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 				git_commit_free(commit);
 
-				commit_node_t new_ref = {oid, shallow_ref};
-				shallow_ref = &new_ref;
+				if (!oid_inlist(shallow_ref, &oid))
+				{
+					commit_node_t new_ref = {&oid, shallow_ref};
+					shallow_ref = &new_ref;
+				}
+
+				continue;
+			}
+
+			if (!strprecmp(line, "want "))
+			{
+				if (!have_flags)
+				{
+					//parse the flags @ line+45
+					have_flags = 1;
+				}
+
+				if (git_oid_fromstr(&oid, line+5))
+				{
+					fatalf("protocol error, expected to get sha, not '%s'", line);
+					goto cleanup;
+				}
+
+				if (git_commit_lookup(&commit, *repo, &oid))
+				{
+					fatalf("not our ref %.40s", line+5);
+					goto cleanup;
+				}
+
+				git_commit_free(commit);
+
+				if (!oid_inlist(wanted_ref, &oid))
+				{
+					commit_node_t new_ref = {&oid, wanted_ref};
+					wanted_ref = &new_ref;
+				}
 
 				continue;
 			}
@@ -306,44 +381,16 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 				continue;
 			}
-
-			if (!strprecmp(line, "want "))
-			{
-				if (!have_flags)
-				{
-					//parse the flags @ line+45
-				}
-
-				if (git_oid_fromstr(&oid, line+5))
-				{
-					fatalf("protocol error, expected to get sha, not '%s'", line);
-					goto cleanup;
-				}
-
-				if (git_commit_lookup(&commit, *repo, &oid))
-				{
-					fatalf("not our ref %.40s", line+5);
-					goto cleanup;
-				}
-
-				git_commit_free(commit);
-
-				commit_node_t new_ref = {oid, wanted_ref};
-				wanted_ref = &new_ref;
-
-				continue;
-			}
 		}
+
+		if (repo__shallow_update(repo))
+			goto cleanup;
 
 		if (repo__get_common(repo))
-		{
 			goto cleanup;
-		}
 
 		if (repo__build_pack(repo))
-		{
 			goto cleanup;
-		}
 
 		goto cleanup;
 	}

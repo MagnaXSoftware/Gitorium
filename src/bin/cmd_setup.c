@@ -404,7 +404,9 @@ int cmd_setup(int argc, char **argv)
 		return GITORIUM_ERROR;
 	}
 
-	return setup__admin_repo(argv[0], (!strcmp("--force", argv[0])) ? 1 : 0);
+	return setup__admin_repo(
+		(!strcmp("--force", argv[0])) ? argv[1] : argv[0],
+		(!strcmp("--force", argv[0])) ? 1 : 0);
 }
 
 int cmd_setup_help(int argc, char **argv)

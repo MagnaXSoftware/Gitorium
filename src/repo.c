@@ -442,7 +442,10 @@ static int repo__build_send_pack(git_repository *repo)
 		return GITORIUM_ERROR;
 	}
 
-	git_packbuilder_set_threads(pb, 0);
+	// using multiple threads allows for faster processing, but the order of the
+	// objects cannot be guaranteed.
+	// XXX: should we using multiple threads?
+	/* git_packbuilder_set_threads(pb, 0); */
 
 	commit_node_t *cur = wanted_ref;
 

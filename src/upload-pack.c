@@ -25,6 +25,12 @@ struct commit_node
 
 typedef void (*traversal_cb)(const git_oid *, void *);
 
+typedef struct
+{
+	git_repository *repo;
+	git_packbuilder *pb;
+} mydata;
+
 static commit_node_t *wanted_ref = NULL;
 static commit_node_t *common_ref = NULL;
 static commit_node_t *shallow_ref = NULL;
@@ -120,21 +126,19 @@ static void __check_shallow(const git_oid *oid, void *payload)
 		}
 	}
 }
-struct mydata
-{
-	git_repository *repo;
-	git_packbuilder *pb;
-};
 
 static void __insert_commit(const git_oid *id, void *payload)
 {
-	struct mydata *info = (struct mydata *) payload;
+	mydata *info = (mydata *) payload;
 	git_commit *commit;
 
-	git_packbuilder_insert(info->pb, id, NULL);
-	git_commit_lookup(&commit, info->repo, id);
-	git_packbuilder_insert_tree(info->pb, git_commit_tree_id(commit));
-	git_commit_free(commit);
+	if (!oid_inlist(common_ref, id))
+	{
+		git_packbuilder_insert(info->pb, id, NULL);
+		git_commit_lookup(&commit, info->repo, id);
+		git_packbuilder_insert_tree(info->pb, git_commit_tree_id(commit));
+		git_commit_free(commit);
+	}
 
 	return;
 }
@@ -172,64 +176,6 @@ static int __send_pack(void *buf, size_t size, void *payload)
 		fwrite(buf, sizeof(char), size, stdout);
 
 	return 0;
-}
-
-static int repo__get_common(git_repository *repo)
-{
-	int found_common = 0;
-
-	for (;;)
-	{
-		git_oid oid;
-		git_commit *commit;
-		char *line = gitio_fread_line(stdin);
-
-		if (!line && !found_common)
-		{
-			gitio_write("NAK\n");
-			return 0;
-		}
-
-		if (!strprecmp(line, "have "))
-		{
-			if ((0 == transfer_flags.multi_ack) && found_common)
-				continue;
-
-			if (git_oid_fromstr(&oid, line+5))
-			{
-				fatalf("protocol error, expected to get sha, not '%s'", line);
-				return GITORIUM_ERROR;
-			}
-
-			if (git_commit_lookup(&commit, repo, &oid))
-			{
-				fatalf("not our ref %.40s", line+5);
-				return GITORIUM_ERROR;
-			}
-
-			git_commit_free(commit);
-
-			if (!oid_inlist(common_ref, &oid))
-			{
-
-				commit_node_t new_ref = {&oid, common_ref};
-				common_ref = &new_ref;
-				found_common = 1;
-
-				gitio_write("ACK %.40s\n", line+5);
-				fflush(stdout);
-			}
-
-			continue;
-		}
-
-		if (!strprecmp(line, "done") && !found_common)
-		{
-			gitio_write("NAK\n");
-			return 0;
-		}
-	}
-	return GITORIUM_ERROR;
 }
 
 static int repo__shallow_update(git_repository *repo)
@@ -279,6 +225,68 @@ static int repo__shallow_update(git_repository *repo)
 	return 0;
 }
 
+static int repo__get_common(git_repository *repo)
+{
+	int found_common = 0;
+
+	for (;;)
+	{
+		git_oid oid;
+		git_commit *commit;
+		char *line = gitio_fread_line(stdin);
+
+		if (!line && !found_common)
+		{
+			gitio_write("NAK\n");
+			return 0;
+		}
+
+		if (!strprecmp(line, "have "))
+		{
+			if (git_oid_fromstr(&oid, line+5))
+			{
+				fatalf("protocol error, expected to get sha, not '%s'", line);
+				return GITORIUM_ERROR;
+			}
+
+			if (git_commit_lookup(&commit, repo, &oid))
+			{
+				fatalf("not our ref %.40s", line+5);
+				return GITORIUM_ERROR;
+			}
+
+			git_commit_free(commit);
+
+			if (!oid_inlist(common_ref, &oid))
+			{
+
+				commit_node_t new_ref = {&oid, common_ref};
+				common_ref = &new_ref;
+
+				if (0 == transfer_flags.multi_ack)
+				{
+					if (!found_common)
+					{
+						found_common = 1;
+						gitio_write("ACK %.40s\n", line+5);
+					}
+				}
+
+				fflush(stdout);
+			}
+
+			continue;
+		}
+
+		if (!strprecmp(line, "done") && !found_common)
+		{
+			gitio_write("NAK\n");
+			return 0;
+		}
+	}
+	return GITORIUM_ERROR;
+}
+
 static int repo__build_send_pack(git_repository *repo)
 {
 	git_packbuilder *pb;
@@ -294,9 +302,8 @@ static int repo__build_send_pack(git_repository *repo)
 	// XXX: should we using multiple threads?
 	/* git_packbuilder_set_threads(pb, 0); */
 
+	mydata info = {repo, pb};
 	commit_node_t *cur = wanted_ref;
-
-	struct mydata info = {repo, pb};
 
 	while (cur)
 	{

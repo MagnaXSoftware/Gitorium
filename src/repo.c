@@ -406,19 +406,23 @@ static int __send_pack(void *buf, size_t size, void *payload)
 	}
 	else if (1 == transfer_flags.side_band)
 	{
-		size_t n = size;
 		const char *p = buf;
 		while (size)
 		{
-			if (DEFAULT_PACKET_SIZE < n+1)
+			size_t t = size;
+
+			if (t > DEFAULT_PACKET_SIZE+1)
 			{
-				n -= (DEFAULT_PACKET_SIZE-1);
-				p += (DEFAULT_PACKET_SIZE-1);
+				t = (DEFAULT_PACKET_SIZE-1);
+				size -= t;
 			}
 			else
-				n = 0;
+				size = 0;
 
-			gitio_write("%c%.999s", '\1', p);
+			fprintf(stdout, "%04x%c", (unsigned int) t+5, 1);
+			fwrite((void *) p, sizeof(char), t, stdout);
+
+			p += t;
 		}
 	}
 	else
@@ -571,6 +575,11 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 		if (repo__build_send_pack(*repo))
 			goto cleanup;
+
+		if (transfer_flags.side_band)
+			gitio_fflush(stdout);
+
+		fflush(stdout);
 
 		goto cleanup;
 	}

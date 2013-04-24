@@ -19,7 +19,7 @@ static struct
 typedef struct commit_node commit_node_t;
 struct commit_node
 {
-	git_oid *id;
+	git_oid id;
 	commit_node_t *next;
 };
 
@@ -42,7 +42,7 @@ static int oid_inlist(const commit_node_t * const start, const git_oid *id)
 	const commit_node_t *cur = start;
 	while (cur)
 	{
-		if (!git_oid_cmp(cur->id, id))
+		if (!git_oid_cmp(&cur->id, id))
 			return 1;
 
 		cur = cur->next;
@@ -101,7 +101,7 @@ static void __check_shallow(const git_oid *oid, void *payload)
 	if (NULL == cur)
 		return;
 
-	if (!git_oid_cmp(oid, cur->id))
+	if (!git_oid_cmp(oid, &cur->id))
 	{
 		char id[40];
 
@@ -114,7 +114,7 @@ static void __check_shallow(const git_oid *oid, void *payload)
 
 	while (cur->next)
 	{
-		if (!git_oid_cmp(oid, cur->next->id))
+		if (!git_oid_cmp(oid, &cur->next->id))
 		{
 			char id[40];
 
@@ -187,7 +187,7 @@ static int repo__shallow_update(git_repository *repo)
 		{
 			git_commit *commit;
 
-			git_commit_lookup(&commit, repo, cur->id);
+			git_commit_lookup(&commit, repo, &cur->id);
 			load_ancestors(commit, depth, &__print_shallow, NULL);
 			git_commit_free(commit);
 
@@ -199,7 +199,7 @@ static int repo__shallow_update(git_repository *repo)
 		{
 			git_commit *commit;
 
-			git_commit_lookup(&commit, repo, cur->id);
+			git_commit_lookup(&commit, repo, &cur->id);
 			traverse_ancestors(commit, depth, &__check_shallow, NULL);
 			git_commit_free(commit);
 
@@ -213,7 +213,7 @@ static int repo__shallow_update(git_repository *repo)
 		{
 			char id[40];
 
-			git_oid_fmt(id, cur->id);
+			git_oid_fmt(id, &cur->id);
 			gitio_write("unshallow %.40s\n", id);
 
 			cur = cur->next;
@@ -261,7 +261,7 @@ static int repo__get_common(git_repository *repo)
 			if (!oid_inlist(common_ref, &oid))
 			{
 
-				commit_node_t new_ref = {&oid, common_ref};
+				commit_node_t new_ref = {oid, common_ref};
 				common_ref = &new_ref;
 
 				if (0 == transfer_flags.multi_ack)
@@ -311,7 +311,7 @@ static int repo__build_send_pack(git_repository *repo)
 	{
 		git_commit *commit;
 
-		git_commit_lookup(&commit, repo, cur->id);
+		git_commit_lookup(&commit, repo, &cur->id);
 		traverse_ancestors(commit, depth, &__insert_commit, (void *) &info);
 		git_commit_free(commit);
 
@@ -439,7 +439,7 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 				if (!oid_inlist(shallow_ref, &oid))
 				{
-					commit_node_t new_ref = {&oid, shallow_ref};
+					commit_node_t new_ref = {oid, shallow_ref};
 					shallow_ref = &new_ref;
 				}
 
@@ -478,7 +478,7 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 				if (!oid_inlist(wanted_ref, &oid))
 				{
-					commit_node_t new_ref = {&oid, wanted_ref};
+					commit_node_t new_ref = {oid, wanted_ref};
 					wanted_ref = &new_ref;
 				}
 

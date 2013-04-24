@@ -159,11 +159,13 @@ void repo_list_refs(git_repository **repo)
 typedef struct
 {
 	int multi_ack;
+	int side_band;
 } flag_t;
 
 static flag_t transfer_flags =
 {
 	.multi_ack = 0,
+	.side_band = 0
 };
 
 typedef struct commit_node commit_node_t;
@@ -191,7 +193,7 @@ static commit_node_t *common_ref = NULL;
 static commit_node_t *shallow_ref = NULL;
 static int depth = 0;
 
-static int repo__get_common(git_repository **repo)
+static int repo__get_common(git_repository *repo)
 {
 	int found_common = 0;
 
@@ -218,7 +220,7 @@ static int repo__get_common(git_repository **repo)
 				return GITORIUM_ERROR;
 			}
 
-			if (git_commit_lookup(&commit, *repo, &oid))
+			if (git_commit_lookup(&commit, repo, &oid))
 			{
 				fatalf("not our ref %.40s", line+5);
 				return GITORIUM_ERROR;
@@ -249,25 +251,125 @@ static int repo__get_common(git_repository **repo)
 	return GITORIUM_ERROR;
 }
 
-static int repo__shallow_update(git_repository **repo)
+typedef void (*traversal_cb)(const git_oid *, void *);
+
+static void load_ancestors(git_commit *commit, int dep, traversal_cb cb, void *payload)
 {
-	commit_node_t *cur = wanted_ref;
-	while (cur)
+	if (0 == dep)
+		(*cb)(git_commit_id(commit), payload);
+	else
 	{
-		git_commit *commit, *ancestor;
+		for (unsigned int i = 0; i < git_commit_parentcount(commit); i++)
+		{
+			git_commit *ancestor;
+			git_commit_parent(&ancestor, commit, i);
+			load_ancestors(ancestor, dep-1, cb, payload);
+			git_commit_free(ancestor);
+		}
+	}
+}
+
+static void traverse_ancestors(git_commit *commit, int dep, traversal_cb cb, void *payload)
+{
+	(*cb)(git_commit_id(commit), payload);
+	if (0 == depth || 0 < dep)
+	{
+		for (unsigned int i = 0; i < git_commit_parentcount(commit); i++)
+		{
+			git_commit *ancestor;
+			git_commit_parent(&ancestor, commit, i);
+			// In the case that depth is zero, we don't care about the value of 
+			// dep. In the case that depth is non-zero, we are sure that it will 
+			// be a positive or zero value if we reach this point. Therefore, we
+			// can cast it to an unsigned int before removing one from it.
+			traverse_ancestors(ancestor, ((unsigned int) dep)-1, cb, payload);
+			git_commit_free(ancestor);
+		}	
+	}
+}
+
+static void __print_shallow(const git_oid *oid, void *payload)
+{
+	UNUSED(payload);
+	char id[40];
+	git_oid_fmt(id, oid);
+	gitio_write("shallow %.40s\n", id);
+}
+
+static void __check_shallow(const git_oid *oid, void *payload)
+{
+	UNUSED(payload);
+	commit_node_t *cur = shallow_ref;
+
+	if (NULL == cur)
+		return;
+
+	if (!git_oid_cmp(oid, cur->id))
+	{
 		char id[40];
 
-		git_commit_lookup(&commit, *repo, cur->id);
-		git_commit_nth_gen_ancestor(&ancestor, commit, (unsigned int) depth);
-		git_commit_free(commit);
-		if (!ancestor)
-			return GITORIUM_ERROR;
+		git_oid_fmt(id, oid);
+		gitio_write("unshallow %.40s\n", id);
 
-		git_oid_fmt(id, git_commit_id(ancestor));
+		shallow_ref = shallow_ref->next;
+		return;
+	}
 
-		gitio_write("shallow %.40s\n", id);
+	while (cur->next)
+	{
+		if (!git_oid_cmp(oid, cur->next->id))
+		{
+			char id[40];
 
-		cur = cur->next;
+			git_oid_fmt(id, oid);
+			gitio_write("unshallow %.40s\n", id);
+
+			cur->next = cur->next->next;
+			return;
+		}
+	}
+}
+
+static int repo__shallow_update(git_repository *repo)
+{
+	if (0 < depth)
+	{
+		commit_node_t *cur = wanted_ref;
+		while (cur)
+		{
+			git_commit *commit;
+
+			git_commit_lookup(&commit, repo, cur->id);
+			load_ancestors(commit, depth, &__print_shallow, NULL);
+			git_commit_free(commit);
+
+			cur = cur->next;
+		}
+
+		cur = wanted_ref;
+		while (cur)
+		{
+			git_commit *commit;
+
+			git_commit_lookup(&commit, repo, cur->id);
+			traverse_ancestors(commit, depth, &__check_shallow, NULL);
+			git_commit_free(commit);
+
+			cur = cur->next;
+		}
+	}
+	else
+	{
+		commit_node_t *cur = shallow_ref;
+		while (cur)
+		{
+			char id[40];
+
+			git_oid_fmt(id, cur->id);
+			gitio_write("unshallow %.40s\n", id);
+
+			cur = cur->next;
+		}
 	}
 
 	gitio_fflush(stdout);
@@ -275,17 +377,63 @@ static int repo__shallow_update(git_repository **repo)
 	return 0;
 }
 
-static int repo__build_pack(git_repository **repo)
+struct mydata
+{
+	git_repository *repo;
+	git_packbuilder *pb;
+};
+
+static void __insert_commit(const git_oid *id, void *payload)
+{
+	struct mydata *info = (struct mydata *) payload;
+	git_commit *commit;
+
+	git_packbuilder_insert(info->pb, id, NULL);
+	git_commit_lookup(&commit, info->repo, id);
+	git_packbuilder_insert_tree(info->pb, git_commit_tree_id(commit));
+	git_commit_free(commit);
+
+	return;
+}
+
+static int __send_pack(void *buf, size_t size, void *payload)
+{
+	UNUSED(payload);
+	if (0 == transfer_flags.side_band)
+	{
+		fwrite(buf, sizeof(char), size, stdout);
+	}
+	return 0;
+}
+
+static int repo__build_send_pack(git_repository *repo)
 {
 	git_packbuilder *pb;
 
-	if (git_packbuilder_new(&pb, *repo))
+	if (git_packbuilder_new(&pb, repo))
 	{
 		fatal("unexpected internal error");
 		return GITORIUM_ERROR;
 	}
 
 	git_packbuilder_set_threads(pb, 0);
+
+	commit_node_t *cur = wanted_ref;
+
+	struct mydata info = {repo, pb};
+
+	while (cur)
+	{
+		git_commit *commit;
+
+		git_commit_lookup(&commit, repo, cur->id);
+		traverse_ancestors(commit, depth, &__insert_commit, (void *) &info);
+		git_commit_free(commit);
+
+		cur = cur->next;
+	}
+
+	git_packbuilder_foreach(pb, &__send_pack, (void *) NULL);
 
 	return 0;
 }
@@ -383,17 +531,20 @@ void repo_upload_pack(git_repository **repo, int stateless)
 			}
 		}
 
-		if (repo__shallow_update(repo))
+		if (depth)
+		{
+			if (repo__shallow_update(*repo))
+				goto cleanup;
+
+			fflush(stdout);
+		}
+
+		if (repo__get_common(*repo))
 			goto cleanup;
 
 		fflush(stdout);
 
-		if (repo__get_common(repo))
-			goto cleanup;
-
-		fflush(stdout);
-
-		if (repo__build_pack(repo))
+		if (repo__build_send_pack(*repo))
 			goto cleanup;
 
 		goto cleanup;

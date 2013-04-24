@@ -10,6 +10,9 @@
     #define _ATTRIBUTE_FORMAT(m,n) /* nothing */
 #endif // _USE_FCGI_STDIO
 
+#define DEFAULT_PACKET_SIZE 1000
+#define LARGE_PACKET_SIZE 65520
+
 unsigned int  gitio_sformat   (char **out, const char *format, ...) _ATTRIBUTE_FORMAT(2,3);
 void          gitio_fwrite    (FILE *stream, const char *format, ...) _ATTRIBUTE_FORMAT(2,3);
 void          gitio_fflush    (FILE *stream);

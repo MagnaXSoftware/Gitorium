@@ -1,8 +1,5 @@
 #include "gitio.h"
 
-#define DEFAULT_PACKET_SIZE 1000
-#define LARGE_PACKET_SIZE 65520
-
 static size_t gitio__fwrite(FILE *stream, const void *buf, size_t len, size_t size)
 {
 	size_t nn = len;

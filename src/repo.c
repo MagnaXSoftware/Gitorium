@@ -1,5 +1,33 @@
 #include "repo.h"
 
+// This will get extended as I get more capabilities
+static char *cap = "side-band agent=gitorium/"GITORIUM_VERSION;
+
+// upload-pack stuff
+typedef struct
+{
+	int multi_ack;
+	int side_band;
+} flag_t;
+
+static flag_t transfer_flags =
+{
+	.multi_ack = 0,
+	.side_band = 0
+};
+
+typedef struct commit_node commit_node_t;
+struct commit_node
+{
+	git_oid *id;
+	commit_node_t *next;
+};
+
+static commit_node_t *wanted_ref = NULL;
+static commit_node_t *common_ref = NULL;
+static commit_node_t *shallow_ref = NULL;
+static int depth = 0;
+
 int repo_create(char *name)
 {
 	char *nFullpath, *rPath;
@@ -77,9 +105,6 @@ char *repo_massage(char *orig)
 	return orig;
 }
 
-// This will get extended as I get more capabilities
-static char *cap = "agent=gitorium/"GITORIUM_VERSION;
-
 void repo_list_refs(git_repository **repo)
 {
 	git_strarray ref_list;
@@ -156,25 +181,6 @@ void repo_list_refs(git_repository **repo)
 	git_strarray_free(&ref_list);
 }
 
-typedef struct
-{
-	int multi_ack;
-	int side_band;
-} flag_t;
-
-static flag_t transfer_flags =
-{
-	.multi_ack = 0,
-	.side_band = 0
-};
-
-typedef struct commit_node commit_node_t;
-struct commit_node
-{
-	git_oid *id;
-	commit_node_t *next;
-};
-
 static int oid_inlist(const commit_node_t * const start, const git_oid *id)
 {
 	const commit_node_t *cur = start;
@@ -187,11 +193,6 @@ static int oid_inlist(const commit_node_t * const start, const git_oid *id)
 	}
 	return 0;
 }
-
-static commit_node_t *wanted_ref = NULL;
-static commit_node_t *common_ref = NULL;
-static commit_node_t *shallow_ref = NULL;
-static int depth = 0;
 
 static int repo__get_common(git_repository *repo)
 {
@@ -399,7 +400,28 @@ static void __insert_commit(const git_oid *id, void *payload)
 static int __send_pack(void *buf, size_t size, void *payload)
 {
 	UNUSED(payload);
-	if (0 == transfer_flags.side_band)
+	if (2 == transfer_flags.side_band)
+	{
+		//
+	}
+	else if (1 == transfer_flags.side_band)
+	{
+		size_t n = size;
+		const char *p = buf;
+		while (size)
+		{
+			if (DEFAULT_PACKET_SIZE < n+1)
+			{
+				n -= (DEFAULT_PACKET_SIZE-1);
+				p += (DEFAULT_PACKET_SIZE-1);
+			}
+			else
+				n = 0;
+
+			gitio_write("%c%.999s", '\1', p);
+		}
+	}
+	else
 	{
 		fwrite(buf, sizeof(char), size, stdout);
 	}
@@ -489,8 +511,11 @@ void repo_upload_pack(git_repository **repo, int stateless)
 			{
 				if (!have_flags)
 				{
-					//parse the flags @ line+45
 					have_flags = 1;
+					const char *cap = line+46;
+
+					if (strstr(cap, "side-band"))
+						transfer_flags.side_band = 1;
 				}
 
 				if (git_oid_fromstr(&oid, line+5))

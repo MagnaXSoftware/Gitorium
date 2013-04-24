@@ -235,9 +235,10 @@ static int repo__get_common(git_repository *repo)
 		git_commit *commit;
 		char *line = gitio_fread_line(stdin);
 
-		if (!line && !found_common)
+		if (!line)
 		{
-			gitio_write("NAK\n");
+			if (!found_common)
+				gitio_write("NAK\n");
 			return 0;
 		}
 
@@ -278,9 +279,10 @@ static int repo__get_common(git_repository *repo)
 			continue;
 		}
 
-		if (!strprecmp(line, "done") && !found_common)
+		if (!strprecmp(line, "done"))
 		{
-			gitio_write("NAK\n");
+			if (!found_common)
+				gitio_write("NAK\n");
 			return 0;
 		}
 	}

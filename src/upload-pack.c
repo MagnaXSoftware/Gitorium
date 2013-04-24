@@ -418,6 +418,7 @@ void repo_upload_pack(git_repository **repo, int stateless)
 		{
 			git_oid oid;
 			git_commit *commit;
+			git_tag *tag;
 			char *line = gitio_fread_line(stdin);
 
 			if (!line)
@@ -431,13 +432,18 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					goto cleanup;
 				}
 
-				if (git_commit_lookup(&commit, *repo, &oid))
+				if (!git_commit_lookup(&commit, *repo, &oid))
+					git_commit_free(commit);
+				else
 				{
-					fatalf("invalid shallow object %.40s", line+8);
-					goto cleanup;
+					if (!git_tag_lookup(&tag, *repo, &oid))
+						git_tag_free(tag);
+					else
+					{
+						fatalf("invalid shallow object %.40s", line+8);
+						goto cleanup;
+					}
 				}
-
-				git_commit_free(commit);
 
 				if (!oid_inlist(shallow_ref, &oid))
 				{
@@ -472,13 +478,19 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					goto cleanup;
 				}
 
-				if (git_commit_lookup(&commit, *repo, &oid))
-				{
-					fatalf("not our ref %.40s", line+5);
-					goto cleanup;
-				}
 
-				git_commit_free(commit);
+				if (!git_commit_lookup(&commit, *repo, &oid))
+					git_commit_free(commit);
+				else
+				{
+					if (!git_tag_lookup(&tag, *repo, &oid))
+						git_tag_free(tag);
+					else
+					{
+						fatalf("not our ref %.40s", line+5);
+						goto cleanup;
+					}
+				}
 
 				if (!oid_inlist(wanted_ref, &oid))
 				{

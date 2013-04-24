@@ -261,8 +261,10 @@ static int repo__get_common(git_repository *repo)
 			if (!oid_inlist(common_ref, &oid))
 			{
 
-				commit_node_t new_ref = {oid, common_ref};
-				common_ref = &new_ref;
+				commit_node_t *new_ref = malloc(sizeof(commit_node_t));
+				new_ref->id = oid;
+				new_ref->next = common_ref;
+				common_ref = new_ref;
 
 				if (0 == transfer_flags.multi_ack)
 				{
@@ -439,8 +441,10 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 				if (!oid_inlist(shallow_ref, &oid))
 				{
-					commit_node_t new_ref = {oid, shallow_ref};
-					shallow_ref = &new_ref;
+					commit_node_t *new_ref = malloc(sizeof(commit_node_t));
+					new_ref->id = oid;
+					new_ref->next = shallow_ref;
+					shallow_ref = new_ref;
 				}
 
 				continue;
@@ -478,8 +482,10 @@ void repo_upload_pack(git_repository **repo, int stateless)
 
 				if (!oid_inlist(wanted_ref, &oid))
 				{
-					commit_node_t new_ref = {oid, wanted_ref};
-					wanted_ref = &new_ref;
+					commit_node_t *new_ref = malloc(sizeof(commit_node_t));
+					new_ref->id = oid;
+					new_ref->next = wanted_ref;
+					wanted_ref = new_ref;
 				}
 
 				continue;
@@ -524,8 +530,24 @@ void repo_upload_pack(git_repository **repo, int stateless)
 		goto cleanup;
 	}
 
-	return;
-
 	cleanup:
+	while (wanted_ref)
+	{
+		commit_node_t *next = wanted_ref->next;
+		free(wanted_ref);
+		wanted_ref = next;
+	}
+	while (common_ref)
+	{
+		commit_node_t *next = common_ref->next;
+		free(common_ref);
+		common_ref = next;
+	}
+	while (shallow_ref)
+	{
+		commit_node_t *next = shallow_ref->next;
+		free(shallow_ref);
+		shallow_ref = next;
+	}
 	return;
 }

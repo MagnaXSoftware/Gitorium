@@ -1,5 +1,8 @@
 #include "gitio.h"
 
+static char buffer_out[DEFAULT_PACKET_SIZE+4];
+static char buffer_in[LARGE_PACKET_SIZE];
+
 static size_t gitio__fwrite(FILE *stream, const void *buf, size_t len, size_t size)
 {
 	size_t nn = len;
@@ -18,8 +21,6 @@ static size_t gitio__fwrite(FILE *stream, const void *buf, size_t len, size_t si
 	}
 	return nn;
 }
-
-static char buffer_out[DEFAULT_PACKET_SIZE];
 
 static unsigned int gitio__vformat(const char *format, va_list args)
 {
@@ -118,8 +119,6 @@ int gitio_fread(FILE *stream, char *buffer, size_t size)
 	buffer[len] = 0;
 	return ret;
 }
-
-static char buffer_in[LARGE_PACKET_SIZE];
 
 char *gitio_fread_line(FILE *stream)
 {

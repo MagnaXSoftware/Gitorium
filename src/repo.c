@@ -1,7 +1,7 @@
 #include "repo.h"
 
-// This will get extended as I get more capabilities
-static char *cap = "side-band agent=gitorium/"GITORIUM_VERSION;
+// This will get extended as I get more cap_upabilities
+static char *cap_up = "side-band side-band-64k agent=gitorium/"GITORIUM_VERSION;
 
 // upload-pack stuff
 typedef struct
@@ -112,7 +112,7 @@ void repo_list_refs(git_repository **repo)
 	git_reference_list(&ref_list, *repo, GIT_REF_LISTALL);
 
 	if (0 == ref_list.count)
-		gitio_write("0000000000000000000000000000000000000000 capabilities^{}%c%s\n", 0, cap);
+		gitio_write("0000000000000000000000000000000000000000 cap_upabilities^{}%c%s\n", 0, cap_up);
 	else
 	{
 		git_reference *ref;
@@ -125,8 +125,8 @@ void repo_list_refs(git_repository **repo)
 			git_reference *ref_head;
 			git_reference_resolve(&ref_head, ref);
 			git_oid_fmt(out, git_reference_target(ref_head));
-			gitio_write("%s HEAD%c%s\n", out, 0, cap);
-			cap = NULL;
+			gitio_write("%s HEAD%c%s\n", out, 0, cap_up);
+			cap_up = NULL;
 			git_reference_free(ref_head);
 		}
 
@@ -150,10 +150,10 @@ void repo_list_refs(git_repository **repo)
 
 			git_oid_fmt(out, git_reference_target(ref));
 
-			if (cap)
+			if (cap_up)
 			{
-				gitio_write("%s %s%c%s\n", out, refname, 0, cap);
-				cap = NULL;
+				gitio_write("%s %s%c%s\n", out, refname, 0, cap_up);
+				cap_up = NULL;
 			}
 			else
 				gitio_write("%s %s\n", out, refname);
@@ -397,38 +397,38 @@ static void __insert_commit(const git_oid *id, void *payload)
 	return;
 }
 
+static void __send_sideband(void *buf, size_t size, unsigned int max)
+{
+	const char *p = buf;
+	while (size)
+	{
+		size_t t = size;
+
+		if (t > max-1)
+		{
+			t = (max-1);
+			size -= t;
+		}
+		else
+			size = 0;
+
+		fprintf(stdout, "%04x%c", (unsigned int) t+5, 1);
+		fwrite((void *) p, sizeof(char), t, stdout);
+
+		p += t;
+	}
+}
+
 static int __send_pack(void *buf, size_t size, void *payload)
 {
 	UNUSED(payload);
 	if (2 == transfer_flags.side_band)
-	{
-		//
-	}
+		__send_sideband(buf, size, LARGE_PACKET_SIZE);
 	else if (1 == transfer_flags.side_band)
-	{
-		const char *p = buf;
-		while (size)
-		{
-			size_t t = size;
-
-			if (t > DEFAULT_PACKET_SIZE+1)
-			{
-				t = (DEFAULT_PACKET_SIZE-1);
-				size -= t;
-			}
-			else
-				size = 0;
-
-			fprintf(stdout, "%04x%c", (unsigned int) t+5, 1);
-			fwrite((void *) p, sizeof(char), t, stdout);
-
-			p += t;
-		}
-	}
+		__send_sideband(buf, size, DEFAULT_PACKET_SIZE);
 	else
-	{
 		fwrite(buf, sizeof(char), size, stdout);
-	}
+
 	return 0;
 }
 
@@ -516,9 +516,11 @@ void repo_upload_pack(git_repository **repo, int stateless)
 				if (!have_flags)
 				{
 					have_flags = 1;
-					const char *cap = line+46;
+					const char *cap_up = line+46;
 
-					if (strstr(cap, "side-band"))
+					if (strstr(cap_up, "side-band-64k"))
+						transfer_flags.side_band = 2;
+					else if (strstr(cap_up, "side-band"))
 						transfer_flags.side_band = 1;
 				}
 

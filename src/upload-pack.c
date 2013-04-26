@@ -478,7 +478,6 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					goto cleanup;
 				}
 
-
 				if (!git_commit_lookup(&commit, *repo, &oid))
 					git_commit_free(commit);
 				else
@@ -517,6 +516,9 @@ void repo_upload_pack(git_repository **repo, int stateless)
 				continue;
 			}
 		}
+
+		if (!have_flags)
+			goto cleanup;
 
 		if (depth)
 		{

@@ -16,13 +16,6 @@ static struct
 	.no_progress = 0
 };
 
-typedef struct commit_node commit_node_t;
-struct commit_node
-{
-	git_oid id;
-	commit_node_t *next;
-};
-
 typedef void (*traversal_cb)(const git_oid *, void *);
 
 typedef struct
@@ -30,6 +23,14 @@ typedef struct
 	git_repository *repo;
 	git_packbuilder *pb;
 } mydata;
+
+typedef struct commit_node commit_node_t;
+struct commit_node
+{
+	git_oid id;
+	git_otype type;
+	commit_node_t *next;
+};
 
 static commit_node_t *wanted_ref = NULL;
 static commit_node_t *common_ref = NULL;
@@ -185,11 +186,14 @@ static int repo__shallow_update(git_repository *repo)
 		commit_node_t *cur = wanted_ref;
 		while (cur)
 		{
-			git_commit *commit;
+			if (GIT_OBJ_COMMIT == cur->type)
+			{
+				git_commit *commit;
 
-			git_commit_lookup(&commit, repo, &cur->id);
-			load_ancestors(commit, depth, &__print_shallow, NULL);
-			git_commit_free(commit);
+				git_commit_lookup(&commit, repo, &cur->id);
+				load_ancestors(commit, depth, &__print_shallow, NULL);
+				git_commit_free(commit);
+			}
 
 			cur = cur->next;
 		}
@@ -197,11 +201,14 @@ static int repo__shallow_update(git_repository *repo)
 		cur = wanted_ref;
 		while (cur)
 		{
-			git_commit *commit;
+			if (GIT_OBJ_COMMIT == cur->type)
+			{
+				git_commit *commit;
 
-			git_commit_lookup(&commit, repo, &cur->id);
-			traverse_ancestors(commit, depth, &__check_shallow, NULL);
-			git_commit_free(commit);
+				git_commit_lookup(&commit, repo, &cur->id);
+				load_ancestors(commit, depth, &__check_shallow, NULL);
+				git_commit_free(commit);
+			}
 
 			cur = cur->next;
 		}
@@ -311,11 +318,17 @@ static int repo__build_send_pack(git_repository *repo)
 
 	while (cur)
 	{
-		git_commit *commit;
+		if (GIT_OBJ_COMMIT == cur->type)
+		{
+			git_commit *commit;
 
-		git_commit_lookup(&commit, repo, &cur->id);
-		traverse_ancestors(commit, depth, &__insert_commit, (void *) &info);
-		git_commit_free(commit);
+			git_commit_lookup(&commit, repo, &cur->id);
+			traverse_ancestors(commit, depth, &__insert_commit, (void *) &info);
+			git_commit_free(commit);
+		}
+		else
+			// it's a tag!
+			git_packbuilder_insert(pb, &cur->id, NULL);
 
 		cur = cur->next;
 	}
@@ -417,7 +430,7 @@ void repo_upload_pack(git_repository **repo, int stateless)
 		for (;;)
 		{
 			git_oid oid;
-			git_object *obj;
+			git_otype type;
 			char *line = gitio_fread_line(stdin);
 
 			if (!line)
@@ -430,28 +443,33 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					fatalf("invalid shallow line: %s", line);
 					goto cleanup;
 				}
-				
-				if (!git_object_lookup(&obj, *repo, &oid, GIT_OBJ_ANY))
+
+				git_commit *wcommit;
+				if (git_commit_lookup(&wcommit, *repo, &oid))
 				{
-					if (GIT_OBJ_COMMIT != git_object_type(obj) && 
-						GIT_OBJ_TAG != git_object_type(obj))
+					git_tag *wtag;
+					if (git_tag_lookup(&wtag, *repo, &oid))
 					{
-						git_object_free(obj);
-						goto inv_shal;
+						fatalf("invalid shallow object %.40s", line+8);
+						goto cleanup;
 					}
-					git_object_free(obj);
+					else
+					{
+						//git_tag_free(wtag);
+						type = GIT_OBJ_TAG;
+					}
 				}
 				else
 				{
-					inv_shal:
-					fatalf("invalid shallow object %.40s", line+8);
-					goto cleanup;
+					git_commit_free(wcommit);
+					type = GIT_OBJ_COMMIT;
 				}
 
 				if (!oid_inlist(shallow_ref, &oid))
 				{
 					commit_node_t *new_ref = malloc(sizeof(commit_node_t));
 					new_ref->id = oid;
+					new_ref->type = type;
 					new_ref->next = shallow_ref;
 					shallow_ref = new_ref;
 				}
@@ -481,27 +499,32 @@ void repo_upload_pack(git_repository **repo, int stateless)
 					goto cleanup;
 				}
 
-				if (!git_object_lookup(&obj, *repo, &oid, GIT_OBJ_ANY))
+				git_commit *wcommit;
+				if (git_commit_lookup(&wcommit, *repo, &oid))
 				{
-					if (GIT_OBJ_COMMIT != git_object_type(obj) && 
-						GIT_OBJ_TAG != git_object_type(obj))
+					git_tag *wtag;
+					if (git_tag_lookup(&wtag, *repo, &oid))
 					{
-						git_object_free(obj);
-						goto not_ours;
+						fatalf("not our ref %.40s", line+5);
+						goto cleanup;
 					}
-					git_object_free(obj);
+					else
+					{
+						//git_tag_free(wtag);
+						type = GIT_OBJ_TAG;
+					}
 				}
 				else
 				{
-					not_ours:
-					fatalf("not our ref %.40s", line+5);
-					goto cleanup;
+					git_commit_free(wcommit);
+					type = GIT_OBJ_COMMIT;
 				}
 
 				if (!oid_inlist(wanted_ref, &oid))
 				{
 					commit_node_t *new_ref = malloc(sizeof(commit_node_t));
 					new_ref->id = oid;
+					new_ref->type = type;
 					new_ref->next = wanted_ref;
 					wanted_ref = new_ref;
 				}

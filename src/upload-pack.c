@@ -125,6 +125,8 @@ static void __check_shallow(const git_oid *oid, void *payload)
 			cur->next = cur->next->next;
 			return;
 		}
+
+		cur = cur->next;
 	}
 }
 

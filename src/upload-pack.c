@@ -206,7 +206,7 @@ static int repo__shallow_update(git_repository *repo)
 				git_commit *commit;
 
 				git_commit_lookup(&commit, repo, &cur->id);
-				load_ancestors(commit, depth, &__check_shallow, NULL);
+				traverse_ancestors(commit, depth, &__check_shallow, NULL);
 				git_commit_free(commit);
 			}
 

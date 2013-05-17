@@ -8,3 +8,4 @@ src/specific.h
 *.layout
 *.cbp
 *.workspace
+.tags

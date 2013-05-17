@@ -1,233 +1,340 @@
 #include "main.h"
 
-static void get_line(char **linep)
+static int split_args(char ***args, char *str)
 {
-    char *line = malloc(LINE_BUFFER_SIZE);
-    int len = LINE_BUFFER_SIZE, c;
-    *linep = line;
+	char **res = NULL, *p = strtok(str, " ");
+	int n_spaces = 0, i = 0;
 
-    if(line == NULL)
-        return;
+	while (p)
+	{
+		res = realloc(res, sizeof (char*) * ++n_spaces);
 
-    for(;;)
-    {
-        c = fgetc(stdin);
-        if(c == EOF || c == '\n')
-            break;
+		if (res == NULL)
+			return GITORIUM_MEM_ALLOC;
 
-        if(--len == 0)
-        {
-            char *linen = realloc(*linep, sizeof *linep + LINE_BUFFER_SIZE);
-            if(linen == NULL)
-                exit(-2);
+		res[n_spaces-1] = p;
+		i++;
+		p = strtok(NULL, " ");
+	}
 
-            len = LINE_BUFFER_SIZE;
-            line = linen + (line - *linep);
-            *linep = linen;
-        }
+	res = realloc(res, sizeof(char*) * (n_spaces+1));
+	if (res == NULL)
+		return GITORIUM_MEM_ALLOC;
 
-        *line++ = c;
-    }
+	res[n_spaces] = 0;
+	*args = res;
 
-    *line = '\0';
+	return i;
 }
 
-static void split_args(char ***args, char *str)
+static void exec__setup_interactive(void *payload)
 {
-    char **res = NULL, *p = strtok(str, " ");
-    int n_spaces = 0;
-
-    while (p)
-    {
-        res = realloc(res, sizeof (char*) * ++n_spaces);
-
-        if (res == NULL)
-            exit(-2);
-
-        res[n_spaces-1] = p;
-        p = strtok(NULL, " ");
-    }
-
-    res = realloc(res, sizeof(char*) * (n_spaces+1));
-    res[n_spaces] = 0;
-    *args = res;
+	setenv("GITORIUM_USER", (char *)payload, 1);
 }
 
-static struct git_exec
+static struct non_interactive_cmd
 {
-    const char *name;
-    const int perms;
-    const char *dir;
+	const char *name;
+	const int perms;
+	const char *dir;
 } cmd_list[] =
 {
-    { "git-receive-pack",   PERM_WRITE, "push" },
-    { "git-upload-pack",    PERM_READ , "pull" },
-    { "git-upload-archive", PERM_READ , "pull" },
-    { NULL },
+	{ "git-receive-pack",   PERM_WRITE, "push" },
+	{ "git-upload-pack",    PERM_READ , "pull" },
+	{ "git-upload-archive", PERM_READ , "pull" },
+	{ NULL },
 };
 
 static int run_non_interactive(const char *user, char *orig)
 {
-    char **args, *rPath;
+	char **args, *rPath;
 
-    split_args(&args, orig);
+	split_args(&args, orig);
 
-    char *mName = malloc(sizeof(char) * (strlen(args[1]) + 1)), *imName = mName;
-    strcpy(mName, args[1]);
+	char *repoName = malloc(sizeof(char) * (strlen(args[1]) + 1)), *irepoName = repoName;
+	if (NULL == repoName)
+		return GITORIUM_MEM_ALLOC;
 
-    config_t cfg;
-    config_setting_t *setting;
+	strcpy(repoName, args[1]);
+	repoName = repo_massage(repoName);
 
-    config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
+	config_lookup_string(&aCfg, "repositories", (const char **)&rPath);
 
-    config_init(&cfg);
-    if (gitorium__repo_config_load(&cfg))
-    {
-        config_destroy(&cfg);
-        return EXIT_FAILURE;
-    }
+	for (struct non_interactive_cmd *cmd = cmd_list; cmd->name ; cmd++)
+	{
+		if (strcmp(cmd->name, args[0]))
+			continue;
 
-    if ((setting = config_lookup(&cfg, "repositories")) == NULL)
-    {
-        fatal("could not load the repository list")
-        config_destroy(&cfg);
-        return EXIT_FAILURE;
-    }
+		char *rFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(repoName) + 4 + 1));
+		if (NULL == rFullpath)
+		{
+			free(irepoName);
+			return GITORIUM_MEM_ALLOC;
+		}
+		strcat(strcat(strcpy(rFullpath, rPath), repoName), ".git");
 
-    if ('\'' == mName[0])
-        mName++;
+		if ('~' == repoName[0]) //user dir
+		{
+			if (strprecmp(&repoName[1], user))
+			{
+				fatal("insufficient permissions");
+				free(rFullpath);
+				free(irepoName);
+				return GITORIUM_NOPERM;
+			}
 
-    if ('\'' == mName[strlen(mName)-1])
-        mName[strlen(mName)-1] = 0;
+			struct stat rStat;
 
-    if ('/' == mName[strlen(mName)-1])
-        mName[strlen(mName)-1] = 0;
+			if (stat(rFullpath, &rStat))
+			{
+				char *rPartpath = malloc(sizeof(char) * (strlen(rPath) + 1 + strlen(user) + 1));
+				if (NULL == rPartpath)
+				{
+					free(rFullpath);
+					free(irepoName);
+					return GITORIUM_MEM_ALLOC;
+				}
+				strcat(strcat(strcpy(rPartpath, rPath), "~"), user);
 
-    if (!strcmp(".git", &mName[strlen(mName)-4]))
-        mName[strlen(mName)-4] = 0;
+				if (stat(rPartpath, &rStat))
+					mkdir(rPartpath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-    for (struct git_exec *cmd = cmd_list; cmd->name ; cmd++)
-    {
-        if (strcmp(cmd->name, args[0]))
-            continue;
+				free(rPartpath);
+				repo_create(repoName);
+			}
+		}
+		else
+		{
+			config_t cfg;
+			config_setting_t *setting;
 
-        int count = config_setting_length(setting);
+			config_init(&cfg);
+			if (gitorium__repo_config_load(&cfg))
+			{
+				config_destroy(&cfg);
+				free(rFullpath);
+				free(irepoName);
+				return GITORIUM_ERROR;
+			}
 
-        for (int i = 0; i < count; i++)
-        {
-            config_setting_t *repo = config_setting_get_elem(setting, i);
-            char *name;
+			if (NULL == (setting = config_lookup(&cfg, "repositories")))
+			{
+				fatal("could not load the repository list");
+				config_destroy(&cfg);
+				free(rFullpath);
+				free(irepoName);
+				return GITORIUM_ERROR;
+			}
 
-            config_setting_lookup_string(repo, "name", (const char **) &name);
+			int not_found = 1;
 
-            if (strcmp(name, mName))
-                continue;
+			for (int i = 0; i < config_setting_length(setting); i++)
+			{
+				config_setting_t *repo = config_setting_get_elem(setting, i);
+				char *name;
 
-            if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
-            {
-                config_destroy(&cfg);
-                free(imName);
-                fatal("insufficient permissions")
-                return EXIT_FAILURE;
-            }
-        }
+				config_setting_lookup_string(repo, "name", (const char **) &name);
 
-        pid_t pID = fork();
-        if (pID == 0)                // child
-        {
-            char *rFullpath = malloc(sizeof(char) * (strlen(rPath) + strlen(mName) + 4 + 1));
-            strcat(strcat(strcpy(rFullpath, rPath), mName), ".git");
-            setenv("GITORIUM_USER", user, 1); // THat way we know who is accessing the shell
-            execlp(cmd->name, cmd->name, rFullpath, (char *) NULL);
-            _exit(1);
-        }
-        else if (pID < 0)            // failed to fork
-        {
-            fatalf("failed to launch %s", cmd->name)
-            free(imName);
-            config_destroy(&cfg);
-            return EXIT_FAILURE;
-        }
+				if (strcmp(name, repoName))
+					continue;
 
-        config_destroy(&cfg);
+				not_found = 0;
 
-        waitpid(pID, NULL, 0);
-        free(imName);
-        return 0;
-    }
+				if (perms_check(config_setting_get_member(repo, "perms"), cmd->perms, (const char *) user, config_lookup(&cfg, "groups")))
+				{
+					fatal("insufficient permissions");
+					gitio_fflush(stdout);
+					config_destroy(&cfg);
+					free(rFullpath);
+					free(irepoName);
+					return GITORIUM_NOPERM;
+				}
+				else
+					break;
+			}
 
-    return EXIT_FAILURE;
+			config_destroy(&cfg);
+
+			if (not_found)
+			{
+				fatal("repository not found");
+				free(rFullpath);
+				free(irepoName);
+				return GITORIUM_REPO_NOEXISTS;
+			}
+		}
+
+		free(irepoName);
+
+		if (gitorium_execlp(&exec__setup_interactive, (void *) user, cmd->name, rFullpath, (char *) NULL))
+		{
+			fatalf("failed to launch %s", cmd->name);
+			free(rFullpath);
+			return GITORIUM_EXTERN;
+		}
+
+		return 0;
+	}
+
+	return GITORIUM_ERROR;
 }
+
+static int get_line(char **linep)
+{
+	char *line = malloc(LINE_BUFFER_SIZE);
+	int len = LINE_BUFFER_SIZE, c;
+	*linep = line;
+
+	if(line == NULL)
+		return GITORIUM_MEM_ALLOC;
+
+	for(;;)
+	{
+		c = fgetc(stdin);
+		if(c == EOF || c == '\n')
+			break;
+
+		if(--len == 0)
+		{
+			char *linen = realloc(*linep, sizeof *linep + LINE_BUFFER_SIZE);
+			if(linen == NULL)
+				return GITORIUM_MEM_ALLOC;
+
+			len = LINE_BUFFER_SIZE;
+			line = linen + (line - *linep);
+			*linep = linen;
+		}
+
+		*line++ = c;
+	}
+
+	*line = 0;
+	return 0;
+}
+
+static struct interactive_cmd
+{
+	const char *name;
+	int (*fn)(char *, char **);
+	int (*help_fn)(char *, char **);
+	const char *desc;
+} int_cmds[] =
+{
+	{"list",   &cmd_int_list,   &cmd_int_list_help,     "list known objects"},
+	{NULL}
+};
+
+static int interactive_help(void)
+{
+	puts("Here are the available commands for Gitorium Shell:\n");
+	for (struct interactive_cmd *cmd = int_cmds; cmd->name ; cmd++)
+	{
+		printf("\t%s - %s\n", cmd->name, cmd->desc);
+	}
+	return 0;
+}
+
+static int (*is_command_valid(char *argv[]))(char *, char **)
+{
+	for (struct interactive_cmd *cmd = int_cmds; cmd->name ; cmd++)
+	{
+		if (!strcmp(argv[0], "help"))
+		{
+			if(!strcmp(cmd->name, argv[1]))
+				return cmd->help_fn;
+		}
+
+		if (!strcmp(cmd->name, argv[0]))
+			return cmd->fn;
+	}
+	return NULL;
+}
+/*
+static void trap_sigint(int sig)
+{
+	//@todo I want SIGINT to clear the current line and start a new one.
+}*/
 
 static int run_interactive(char *user)
 {
-    int done = 0;
+	//signal(SIGINT, trap_sigint);
 
-    do
-    {
-        char *line, **args;
+	int done = 0;
 
-        fprintf(stderr, "gitorium (%s)> ", user);
-        get_line(&line);
+	do
+	{
+		/*
+		I would need to do something line
+		start_line()
+		parse_line()
+		end_line()
 
-        if (line[0] == '\0')
-        {
-            free(line);
-            break;
-        }
+		This way, I can call end_line() prematurely
+		*/
+		char *line, **args;
+		int (*fn)(char *, char **);
 
-        split_args(&args, line);
+		fprintf(stderr, "gitorium (%s)> ", user);
+		get_line(&line);
 
-        if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit") ||
-            !strcmp(args[0], "logout") || !strcmp(args[0], "bye"))
-        {
-            done = 1;
-//        } else if (is_remote_command_valid(args[0])) {
-//            call_remote_command(user, args);
-        }
-        else
-            fprintf(stderr, "The command does not exist.\n");
+		if (line[0] == '\0')
+		{
+			free(line);
+			break;
+		}
 
-        free(line);
-        free(args);
-    }
-    while (!done);
+		split_args(&args, line);
 
-    return 0;
+		if (!strcmp(args[0], "quit") || !strcmp(args[0], "exit") ||
+			!strcmp(args[0], "logout") || !strcmp(args[0], "bye"))
+			done = 1;
+		else if (NULL == args[0] ||
+			(!strcmp("help", args[0]) && NULL == args[1]))
+			interactive_help();
+		else if ((fn = is_command_valid(args)) != NULL)
+			(*fn)(user, args);
+		else
+			error("The command does not exist.");
+
+		free(line);
+		free(args);
+	}
+	while (!done);
+
+	return 0;
 }
 
 int main(int argc, char **argv)
 {
-    // We remove the name of the executable from the list
-    argv++;
-    argc--;
+	argv++;
+	argc--;
 
-    int exit = EXIT_FAILURE;
+	int exit = GITORIUM_ERROR;
 
-    if (argc < 1)
-    {
-        // Someone tried to call us directly
-        fprintf(stderr, "You must call this from a shell.\n");
-    }
-    else
-    {
-        char *soc = getenv("SSH_ORIGINAL_COMMAND");
+	if (argc < 1)
+	{
+		error("You cannot call the shell directly.");
+		error("Please use 'gitorium' instead.");
+	}
+	else
+	{
+		char *soc = getenv("SSH_ORIGINAL_COMMAND");
 
-        gitorium__config_init();
+		gitorium__config_init();
 
-        if (NULL == soc)
-        {
-            // Running interactive (first argument is the user's name)
-            exit = run_interactive(argv[0]);
-        }
-        else
-        {
-            // Running non-interactive (only support git commands ATM)
-            exit = run_non_interactive(argv[0], soc);
-        }
+		if (NULL == soc)
+		{
+			// Running interactive (first argument is the user's name)
+			exit = run_interactive(argv[0]);
+		}
+		else
+		{
+			// Running non-interactive (only support git commands ATM)
+			exit = run_non_interactive(argv[0], soc);
+		}
 
-        gitorium__config_close();
-    }
+		gitorium__config_close();
+	}
 
-    return exit;
+	return exit;
 }
